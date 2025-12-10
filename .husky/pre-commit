@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Format code before commit
+echo "🔧 Formatting code with Prettier..."
+npm run format
+
+# Stage formatted files
+git add .

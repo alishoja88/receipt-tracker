@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: receipt-tracker-db-dev
+    environment:
+      POSTGRES_USER: alinina
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: receipts_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alinina"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - receipt-tracker-network-dev
+
+  # Backend API (Development)
+  backend:
+    build:
+      context: ./receipt-tracker-backend
+      dockerfile: Dockerfile.dev
+    container_name: receipt-tracker-backend-dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://alinina:postgres@postgres:5432/receipts_db
+      OCR_API_KEY: ${OCR_API_KEY}
+      OCR_API_ENDPOINT: ${OCR_API_ENDPOINT}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./receipt-tracker-backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - receipt-tracker-network-dev
+    command: npm run start:dev
+    restart: unless-stopped
+
+  # Frontend (Development)
+  frontend:
+    build:
+      context: ./receipt-tracker-frontend
+      dockerfile: Dockerfile.dev
+    container_name: receipt-tracker-frontend-dev
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./receipt-tracker-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - receipt-tracker-network-dev
+    command: npm run dev -- --host
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  receipt-tracker-network-dev:
+    driver: bridge
+

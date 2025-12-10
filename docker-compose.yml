@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: receipt-tracker-db
+    environment:
+      POSTGRES_USER: alinina
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: receipts_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alinina"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - receipt-tracker-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./receipt-tracker-backend
+      dockerfile: Dockerfile
+    container_name: receipt-tracker-backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://alinina:postgres@postgres:5432/receipts_db
+      OCR_API_KEY: ${OCR_API_KEY}
+      OCR_API_ENDPOINT: ${OCR_API_ENDPOINT}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - receipt-tracker-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./receipt-tracker-frontend
+      dockerfile: Dockerfile
+    container_name: receipt-tracker-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - receipt-tracker-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  receipt-tracker-network:
+    driver: bridge
+
+
+
+
+
+
+

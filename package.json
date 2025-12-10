@@ -1,0 +1,23 @@
+{
+  "name": "receipt-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "format:backend": "cd receipt-tracker-backend && npm run format",
+    "format:frontend": "cd receipt-tracker-frontend && npm run format",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:check:backend": "cd receipt-tracker-backend && npm run format:check",
+    "format:check:frontend": "cd receipt-tracker-frontend && npm run format:check",
+    "format:check": "npm run format:check:backend && npm run format:check:frontend",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
+
+
+
+
+
+
