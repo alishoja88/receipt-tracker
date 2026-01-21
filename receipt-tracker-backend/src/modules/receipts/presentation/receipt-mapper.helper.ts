@@ -1,4 +1,5 @@
 import { ReceiptResponseDto } from '../dto/receipt-response.dto';
+import { formatDateToISO } from '../../common/utils/date.util';
 
 /**
  * Helper class for mapping Receipt entities to DTOs
@@ -8,35 +9,23 @@ export class ReceiptMapper {
    * Map Receipt entity to ReceiptResponseDto
    */
   static toResponseDto(receipt: any): ReceiptResponseDto {
+    // Format receiptDate to YYYY-MM-DD string to avoid timezone issues
+    const receiptDate =
+      receipt.receiptDate instanceof Date
+        ? formatDateToISO(receipt.receiptDate)
+        : receipt.receiptDate;
+
     return {
       id: receipt.id,
-      store: {
-        id: receipt.store.id,
-        name: receipt.store.name,
-        address: receipt.store.address,
-        phone: receipt.store.phone,
-        category: receipt.store.category
-          ? {
-              id: receipt.store.category.id,
-              name: receipt.store.category.name,
-              description: receipt.store.category.description,
-            }
-          : null,
-      },
-      receiptDate: receipt.receiptDate,
-      currency: receipt.currency,
-      subtotal: receipt.subtotal,
-      tax: receipt.tax,
-      total: receipt.total,
+      storeName: receipt.storeName,
+      receiptDate: receiptDate, // Format as YYYY-MM-DD string to avoid timezone conversion
+      category: receipt.category,
+      paymentMethod: receipt.paymentMethod,
+      subtotal: receipt.subtotal ? parseFloat(receipt.subtotal) : null,
+      tax: receipt.tax ? parseFloat(receipt.tax) : null,
+      total: parseFloat(receipt.total),
       status: receipt.status,
       needsReview: receipt.needsReview,
-      items: receipt.items
-        ? receipt.items.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            total: parseFloat(item.total),
-          }))
-        : [],
       createdAt: receipt.createdAt,
       updatedAt: receipt.updatedAt,
     };
@@ -46,18 +35,22 @@ export class ReceiptMapper {
    * Map Receipt entity to list item DTO (simplified)
    */
   static toListItemDto(receipt: any) {
+    // Format receiptDate to YYYY-MM-DD string to avoid timezone issues
+    const receiptDate =
+      receipt.receiptDate instanceof Date
+        ? formatDateToISO(receipt.receiptDate)
+        : receipt.receiptDate;
+
     return {
       id: receipt.id,
-      store: {
-        id: receipt.store.id,
-        name: receipt.store.name,
-      },
-      receiptDate: receipt.receiptDate,
+      storeName: receipt.storeName,
+      receiptDate: receiptDate, // Format as YYYY-MM-DD string to avoid timezone conversion
       total: parseFloat(receipt.total),
       status: receipt.status,
       needsReview: receipt.needsReview,
-      itemsCount: receipt.items ? receipt.items.length : 0,
       createdAt: receipt.createdAt,
+      category: receipt.category || null,
+      paymentMethod: receipt.paymentMethod || null,
     };
   }
 }

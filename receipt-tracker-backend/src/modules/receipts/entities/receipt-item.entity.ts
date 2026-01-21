@@ -14,7 +14,7 @@ export class ReceiptItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Receipt, receipt => receipt.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Receipt, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'receipt_id' })
   receipt: Receipt;
 

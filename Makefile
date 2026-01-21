@@ -1,4 +1,4 @@
-.PHONY: help install up down build restart logs clean format test
+.PHONY: help install up down build restart logs clean format test seed
 
 # Colors for output
 BLUE := \033[0;34m
@@ -81,6 +81,25 @@ db-reset: ## Reset database (delete and recreate)
 	docker-compose -f docker-compose.dev.yml up -d postgres
 	@sleep 5
 	@echo "$(GREEN)✅ Database reset!$(NC)"
+
+migration-run: ## Run pending migrations
+	@echo "$(BLUE)🔄 Running migrations...$(NC)"
+	docker-compose -f docker-compose.dev.yml exec backend npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d data-source.ts
+	@echo "$(GREEN)✅ Migrations completed!$(NC)"
+
+migration-revert: ## Revert last migration
+	@echo "$(YELLOW)⚠️  Reverting last migration...$(NC)"
+	docker-compose -f docker-compose.dev.yml exec backend npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d data-source.ts
+	@echo "$(GREEN)✅ Migration reverted!$(NC)"
+
+migration-show: ## Show migration status
+	@echo "$(BLUE)📋 Migration status:$(NC)"
+	docker-compose -f docker-compose.dev.yml exec backend npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d data-source.ts
+
+seed: ## Run seed script to generate test data
+	@echo "$(BLUE)🌱 Running seed script...$(NC)"
+	docker-compose -f docker-compose.dev.yml exec backend npm run seed
+	@echo "$(GREEN)✅ Seed completed!$(NC)"
 
 # ============================================
 # Code Formatting

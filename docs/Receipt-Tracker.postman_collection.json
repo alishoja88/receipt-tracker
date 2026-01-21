@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "Receipt Tracker API",
+    "_postman_id": "receipt-tracker-api",
+    "description": "Complete API collection for Receipt Tracker with AI processing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Stores",
+      "item": [
+        {
+          "name": "Create Store",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.environment.set(\"STORE_ID\", response.id);",
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response has store id\", () => {",
+                  "    pm.expect(response).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Walmart Supercenter\",\n  \"address\": \"123 Main Street, City\",\n  \"phone\": \"555-1234\",\n  \"categoryName\": \"Groceries\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/stores",
+              "host": ["{{BASE_URL}}"],
+              "path": ["stores"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/stores?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["stores"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Store by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/stores/{{STORE_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["stores", "{{STORE_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Store",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Walmart Supercenter - Updated\",\n  \"address\": \"456 New Street\",\n  \"phone\": \"555-5678\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/stores/{{STORE_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["stores", "{{STORE_ID}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Store",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/stores/{{STORE_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["stores", "{{STORE_ID}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Receipts",
+      "item": [
+        {
+          "name": "Upload Receipt (AI)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.environment.set(\"RECEIPT_ID\", response.id);",
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response has receipt id\", () => {",
+                  "    pm.expect(response).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a receipt image (jpg, jpeg, png, or pdf)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/receipts",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts"]
+            },
+            "description": "Upload a receipt image for AI processing"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Receipt Manually",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.environment.set(\"RECEIPT_ID\", response.id);",
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response has receipt id\", () => {",
+                  "    pm.expect(response).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeName\": \"Walmart\",\n  \"storeAddress\": \"123 Main St\",\n  \"storePhone\": \"555-1234\",\n  \"storeCategoryName\": \"Groceries\",\n  \"receiptDate\": \"2024-12-10\",\n  \"currency\": \"USD\",\n  \"subtotal\": 45.50,\n  \"tax\": 3.65,\n  \"total\": 49.15,\n  \"items\": [\n    {\n      \"name\": \"Milk\",\n      \"total\": 3.99\n    },\n    {\n      \"name\": \"Bread\",\n      \"total\": 2.50\n    },\n    {\n      \"name\": \"Eggs\",\n      \"total\": 4.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/receipts/create",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts", "create"]
+            },
+            "description": "Create a receipt manually without AI"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Receipts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/receipts?page=1&limit=20",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "2024-12-01",
+                  "disabled": true
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2024-12-31",
+                  "disabled": true
+                },
+                {
+                  "key": "storeId",
+                  "value": "{{STORE_ID}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "COMPLETED",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all receipts with optional filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Receipts - Needs Review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/receipts?status=NEEDS_REVIEW",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "NEEDS_REVIEW"
+                }
+              ]
+            },
+            "description": "Get receipts that need manual review"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Receipts - By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/receipts?dateFrom=2024-12-01&dateTo=2024-12-31",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts"],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "2024-12-01"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Get receipts within a date range"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Receipt by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/receipts/{{RECEIPT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts", "{{RECEIPT_ID}}"]
+            },
+            "description": "Get a single receipt with all details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Receipt",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeName\": \"Walmart Updated\",\n  \"receiptDate\": \"2024-12-11\",\n  \"total\": 55.99,\n  \"items\": [\n    {\n      \"name\": \"Milk\",\n      \"total\": 3.99\n    },\n    {\n      \"name\": \"Bread\",\n      \"total\": 2.50\n    },\n    {\n      \"name\": \"Orange Juice\",\n      \"total\": 4.50\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/receipts/{{RECEIPT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts", "{{RECEIPT_ID}}"]
+            },
+            "description": "Update an existing receipt"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Receipt",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/receipts/{{RECEIPT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["receipts", "{{RECEIPT_ID}}"]
+            },
+            "description": "Delete a receipt"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
+
+

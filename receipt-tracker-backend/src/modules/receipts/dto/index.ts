@@ -1,8 +1,3 @@
-export { CreateReceiptDto, CreateReceiptItemDto } from './create-receipt.dto';
+export { CreateReceiptDto } from './create-receipt.dto';
 export { UpdateReceiptDto } from './update-receipt.dto';
-export {
-  ReceiptResponseDto,
-  ReceiptItemResponseDto,
-  StoreResponseDto,
-  CategoryResponseDto,
-} from './receipt-response.dto';
+export { ReceiptResponseDto } from './receipt-response.dto';

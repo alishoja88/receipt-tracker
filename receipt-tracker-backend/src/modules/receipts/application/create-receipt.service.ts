@@ -1,64 +1,44 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ReceiptsRepository } from '../infrastructure/persistence/receipts.repository';
 import { CreateReceiptDto } from '../dto/create-receipt.dto';
-import { Receipt, ReceiptStatus } from '../entities/receipt.entity';
-import { ReceiptItem } from '../entities/receipt-item.entity';
-import { SharedReceiptService } from './shared-receipt.service';
+import { Receipt, ReceiptStatus, PaymentMethod } from '../entities/receipt.entity';
+import { parseLocalDate } from '../../common/utils/date.util';
 
 /**
  * Service for creating receipts
  */
 @Injectable()
 export class CreateReceiptService {
-  constructor(
-    private readonly receiptsRepository: ReceiptsRepository,
-    private readonly sharedReceiptService: SharedReceiptService,
-  ) {}
+  constructor(private readonly receiptsRepository: ReceiptsRepository) {}
 
   /**
    * Create a new receipt
    */
-  async execute(dto: CreateReceiptDto): Promise<Receipt> {
-    // 1. Find or create store category (if provided)
-    let categoryId: string | null = null;
-    if (dto.storeCategoryName) {
-      const category = await this.sharedReceiptService.findOrCreateCategory(dto.storeCategoryName);
-      categoryId = category.id;
-    }
-
-    // 2. Find or create store
-    const store = await this.sharedReceiptService.findOrCreateStore(
-      dto.storeName,
-      dto.storeAddress,
-      dto.storePhone,
-      categoryId,
-    );
-
-    // 3. Create receipt
+  async execute(dto: CreateReceiptDto, userId: string): Promise<Receipt> {
+    // Create receipt
     const receipt = new Receipt();
-    receipt.storeId = store.id;
-    receipt.receiptDate = new Date(dto.receiptDate);
-    receipt.currency = dto.currency || null;
+    receipt.userId = userId;
+    receipt.storeName = dto.storeName;
+    receipt.receiptDate = parseLocalDate(dto.receiptDate);
     receipt.subtotal = dto.subtotal || null;
     receipt.tax = dto.tax || null;
     receipt.total = dto.total;
     receipt.status = ReceiptStatus.COMPLETED;
     receipt.needsReview = false;
 
+    // Set category and payment method if provided
+    receipt.category = dto.category || null;
+    receipt.paymentMethod =
+      dto.paymentMethod && Object.values(PaymentMethod).includes(dto.paymentMethod as PaymentMethod)
+        ? (dto.paymentMethod as PaymentMethod)
+        : null;
+
     const savedReceipt = await this.receiptsRepository.create(receipt);
 
-    // 4. Create receipt items
-    const receiptItems = dto.items.map(itemDto => {
-      const item = new ReceiptItem();
-      item.receiptId = savedReceipt.id;
-      item.name = itemDto.name;
-      item.total = itemDto.total;
-      return item;
-    });
+    // Note: Items are not stored in database - only category summaries are saved
+    // Items are optional and will be ignored if provided
 
-    await this.receiptsRepository.createItems(receiptItems);
-
-    // 5. Return receipt with relations
+    // 4. Return receipt with relations
     const result = await this.receiptsRepository.findById(savedReceipt.id);
     if (!result) {
       throw new BadRequestException('Failed to create receipt');

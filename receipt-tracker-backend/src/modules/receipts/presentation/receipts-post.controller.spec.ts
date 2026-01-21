@@ -7,6 +7,7 @@ import { CreateReceiptDto } from '../dto/create-receipt.dto';
 import { Receipt, ReceiptStatus } from '../entities/receipt.entity';
 import { Store } from '../../stores/entities/store.entity';
 import { ReceiptItem } from '../entities/receipt-item.entity';
+import { ReceiptProcessingService } from '../../ai/application';
 
 // Mock ReceiptMapper
 jest.mock('./receipt-mapper.helper', () => ({
@@ -18,6 +19,7 @@ jest.mock('./receipt-mapper.helper', () => ({
 describe('ReceiptsPostController', () => {
   let controller: ReceiptsPostController;
   let service: CreateReceiptService;
+  let processingService: ReceiptProcessingService;
 
   const mockStore: Store = {
     id: 'store-id',
@@ -36,7 +38,10 @@ describe('ReceiptsPostController', () => {
     storeId: 'store-id',
     store: mockStore,
     receiptDate: new Date('2024-01-15'),
-    currency: 'USD',
+    category: null,
+    paymentMethod: null,
+    cardType: null,
+    cardLast4Digits: null,
     subtotal: 90,
     tax: 10,
     total: 100,
@@ -69,7 +74,6 @@ describe('ReceiptsPostController', () => {
       category: null,
     },
     receiptDate: new Date('2024-01-15'),
-    currency: 'USD',
     subtotal: 90,
     tax: 10,
     total: 100,
@@ -96,11 +100,19 @@ describe('ReceiptsPostController', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: ReceiptProcessingService,
+          useValue: {
+            processReceiptImage: jest.fn(),
+            isAvailable: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<ReceiptsPostController>(ReceiptsPostController);
     service = module.get<CreateReceiptService>(CreateReceiptService);
+    processingService = module.get<ReceiptProcessingService>(ReceiptProcessingService);
     jest.clearAllMocks();
   });
 
@@ -149,11 +161,36 @@ describe('ReceiptsPostController', () => {
       stream: null as any,
     };
 
-    it('should throw BadRequestException indicating AI Module is required', async () => {
+    it('should throw BadRequestException when AI services are not available', async () => {
+      (processingService.isAvailable as jest.Mock).mockReturnValue({
+        ocr: false,
+        llm: false,
+        available: false,
+      });
+
       await expect(controller.uploadReceipt(mockFile)).rejects.toThrow(BadRequestException);
       await expect(controller.uploadReceipt(mockFile)).rejects.toThrow(
-        'Receipt upload requires AI Module. Please use POST /api/receipts/create endpoint with receipt data.',
+        'AI services are not configured',
       );
+    });
+
+    it('should process receipt and return result when AI services are available', async () => {
+      (processingService.isAvailable as jest.Mock).mockReturnValue({
+        ocr: true,
+        llm: true,
+        available: true,
+      });
+      (processingService.processReceiptImage as jest.Mock).mockResolvedValue(mockReceipt);
+      (ReceiptMapper.toResponseDto as jest.Mock).mockReturnValue(mockResponseDto);
+
+      const result = await controller.uploadReceipt(mockFile);
+
+      expect(processingService.processReceiptImage).toHaveBeenCalledWith(
+        mockFile.buffer,
+        mockFile.mimetype,
+      );
+      expect(ReceiptMapper.toResponseDto).toHaveBeenCalledWith(mockReceipt);
+      expect(result).toEqual(mockResponseDto);
     });
   });
 });

@@ -27,12 +27,11 @@ services:
       context: ./receipt-tracker-backend
       dockerfile: Dockerfile.dev
     container_name: receipt-tracker-backend-dev
+    env_file:
+      - ./receipt-tracker-backend/.env
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://alinina:postgres@postgres:5432/receipts_db
-      OCR_API_KEY: ${OCR_API_KEY}
-      OCR_API_ENDPOINT: ${OCR_API_ENDPOINT}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
       PORT: 3000
     ports:
       - "3000:3000"

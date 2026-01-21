@@ -35,8 +35,7 @@ export class Store {
   @Column({ name: 'category_id', nullable: true })
   categoryId: string | null;
 
-  @OneToMany(() => Receipt, receipt => receipt.store)
-  receipts: Receipt[];
+  // Removed receipts relation - receipts now store store name directly
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ReceiptsGetController,
@@ -6,7 +6,6 @@ import {
   ReceiptsPutController,
   ReceiptsDeleteController,
 } from './presentation';
-import { ReceiptService } from './application/receipt.service';
 import {
   CreateReceiptService,
   GetReceiptsService,
@@ -15,11 +14,14 @@ import {
   SharedReceiptService,
 } from './application';
 import { ReceiptsRepository } from './infrastructure/persistence/receipts.repository';
-import { Receipt, ReceiptItem, Category } from './entities';
+import { Receipt, Category } from './entities';
 import { Store } from '../stores/entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Receipt, ReceiptItem, Category, Store])],
+  imports: [
+    TypeOrmModule.forFeature([Receipt, Category, Store]),
+    forwardRef(() => import('../ai/ai.module').then(m => m.AiModule)),
+  ],
   controllers: [
     ReceiptsGetController,
     ReceiptsPostController,
@@ -27,7 +29,6 @@ import { Store } from '../stores/entities';
     ReceiptsDeleteController,
   ],
   providers: [
-    ReceiptService,
     ReceiptsRepository,
     CreateReceiptService,
     GetReceiptsService,
@@ -35,6 +36,6 @@ import { Store } from '../stores/entities';
     DeleteReceiptService,
     SharedReceiptService,
   ],
-  exports: [ReceiptsRepository],
+  exports: [ReceiptsRepository, SharedReceiptService],
 })
 export class ReceiptsModule {}

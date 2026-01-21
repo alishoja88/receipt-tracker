@@ -5,11 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Store } from '../../stores/entities/store.entity';
-import { ReceiptItem } from './receipt-item.entity';
+import { User } from '../../auth/entities/user.entity';
 
 export enum ReceiptStatus {
   PROCESSING = 'PROCESSING',
@@ -18,23 +16,43 @@ export enum ReceiptStatus {
   NEEDS_REVIEW = 'NEEDS_REVIEW',
 }
 
+export enum PaymentMethod {
+  CARD = 'CARD',
+  CASH = 'CASH',
+  OTHER = 'OTHER',
+}
+
 @Entity('receipts')
 export class Receipt {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Store, store => store.receipts, { eager: true })
-  @JoinColumn({ name: 'store_id' })
-  store: Store;
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-  @Column({ name: 'store_id' })
-  storeId: string;
+  @Column({ name: 'user_id' })
+  userId: string;
+
+  @Column({ name: 'store_name', type: 'varchar', length: 255 })
+  storeName: string;
 
   @Column({ type: 'date' })
   receiptDate: Date;
 
-  @Column({ type: 'varchar', length: 10, nullable: true })
-  currency: string | null;
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  category: string | null;
+
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    nullable: true,
+  })
+  paymentMethod: PaymentMethod | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   subtotal: number | null;
@@ -60,9 +78,6 @@ export class Receipt {
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   imageUrl: string | null;
-
-  @OneToMany(() => ReceiptItem, item => item.receipt, { cascade: true })
-  items: ReceiptItem[];
 
   @CreateDateColumn()
   createdAt: Date;

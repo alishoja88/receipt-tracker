@@ -1,12 +1,12 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Store } from '../modules/stores/entities';
-import { Category, Receipt, ReceiptItem } from '../modules/receipts/entities';
+import { Receipt } from '../modules/receipts/entities';
+import { User, RefreshToken } from '../modules/auth/entities';
 
 export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'postgres',
   url: configService.get<string>('DATABASE_URL'),
-  entities: [Store, Category, Receipt, ReceiptItem],
-  synchronize: configService.get<string>('NODE_ENV') !== 'production',
+  entities: [Receipt, User, RefreshToken],
+  synchronize: false, // NEVER use true - it drops all data! Use migrations instead
   logging: configService.get<string>('NODE_ENV') === 'development',
 });

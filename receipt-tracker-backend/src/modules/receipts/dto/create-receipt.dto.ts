@@ -31,10 +31,6 @@ export class CreateReceiptDto {
   receiptDate: string;
 
   @IsOptional()
-  @IsString()
-  currency?: string;
-
-  @IsOptional()
   @IsNumber()
   subtotal?: number;
 
@@ -46,11 +42,19 @@ export class CreateReceiptDto {
   @IsNumber()
   total: number;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  category?: string | null;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string | null;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateReceiptItemDto)
-  items: CreateReceiptItemDto[];
+  items?: CreateReceiptItemDto[];
 }
 
 export class CreateReceiptItemDto {

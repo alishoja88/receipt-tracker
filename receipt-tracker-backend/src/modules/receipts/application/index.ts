@@ -1,4 +1,3 @@
-export { ReceiptService } from './receipt.service';
 export { CreateReceiptService } from './create-receipt.service';
 export { GetReceiptsService } from './get-receipts.service';
 export { UpdateReceiptService } from './update-receipt.service';
