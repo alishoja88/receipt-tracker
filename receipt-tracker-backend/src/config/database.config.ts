@@ -7,6 +7,8 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
   type: 'postgres',
   url: configService.get<string>('DATABASE_URL'),
   entities: [Receipt, User, RefreshToken],
+  migrations: [__dirname + '/../migrations/*.{ts,js}'],
+  migrationsRun: configService.get<string>('NODE_ENV') === 'production',
   synchronize: false, // NEVER use true - it drops all data! Use migrations instead
   logging: configService.get<string>('NODE_ENV') === 'development',
 });
