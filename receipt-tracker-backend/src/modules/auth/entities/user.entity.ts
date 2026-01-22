@@ -19,10 +19,10 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  @Column({ name: 'google_id', type: 'varchar', length: 255, unique: true, nullable: true })
   googleId: string | null;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true })
   avatarUrl: string | null;
 
   @OneToMany(() => RefreshToken, refreshToken => refreshToken.user, { cascade: true })
