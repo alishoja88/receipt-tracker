@@ -26,21 +26,34 @@ const categories = [
 ];
 
 const stores = [
-  'Walmart',
-  'Costco',
-  'Target',
-  'Whole Foods',
-  'CVS Pharmacy',
-  'Starbucks',
-  "McDonald's",
-  'Shell',
-  'Home Depot',
-  'Best Buy',
-  'Amazon',
-  "Trader Joe's",
+  'Tim Hortons',
+  'Canadian Tire',
+  'Loblaws',
+  'Sobeys',
+  'Metro',
+  'Shoppers Drug Mart',
+  'Costco Canada',
+  'Walmart Canada',
+  'Home Depot Canada',
+  'Rona',
+  'Best Buy Canada',
+  'Sport Chek',
+  'Chapters Indigo',
+  'The Bay',
+  'Winners',
+  'Roots',
+  'Second Cup',
+  'Boston Pizza',
+  'Swiss Chalet',
+  "Harvey's",
 ];
 
-const paymentMethods = [PaymentMethod.CARD, PaymentMethod.CASH, PaymentMethod.OTHER];
+// Payment methods with weighted distribution (75% CARD, 20% CASH, 5% OTHER)
+const paymentMethods = [
+  ...Array(75).fill(PaymentMethod.CARD),
+  ...Array(20).fill(PaymentMethod.CASH),
+  ...Array(5).fill(PaymentMethod.OTHER),
+];
 
 interface ReceiptSeedData {
   storeName: string;
@@ -173,14 +186,14 @@ async function seed() {
     const userRepository = dataSource.getRepository(User);
 
     // Find or create a test user with your Google email
-    const testUserEmail = 'alibrave8867@gmail.com';
+    const testUserEmail = 'alishojaa88@gmail.com';
     let testUser = await userRepository.findOne({ where: { email: testUserEmail } });
 
     if (!testUser) {
       console.log(`👤 Creating test user: ${testUserEmail}...`);
       testUser = userRepository.create({
         email: testUserEmail,
-        name: 'Ali Brave',
+        name: 'Ali Shoja',
         googleId: null, // Will be set automatically when you login with Google
       });
       testUser = await userRepository.save(testUser);
@@ -190,8 +203,8 @@ async function seed() {
       console.log(`✅ Using existing test user: ${testUser.id}`);
       console.log(`📧 Email: ${testUser.email}`);
       // Update name if needed
-      if (testUser.name !== 'Ali Brave') {
-        testUser.name = 'Ali Brave';
+      if (testUser.name !== 'Ali Shoja') {
+        testUser.name = 'Ali Shoja';
         await userRepository.save(testUser);
       }
     }
@@ -204,74 +217,44 @@ async function seed() {
       console.log('✅ Existing receipts deleted');
     }
 
-    // Generate date range: last 3 months
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 3);
+    // Generate date range: 6 months ago to today (January 22, 2026)
+    const today = new Date('2026-01-22'); // Today's date
+    const sixMonthsAgo = new Date('2025-07-22'); // 6 months ago
 
     console.log(
-      `📅 Generating receipts from ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
+      `📅 Generating receipts from ${sixMonthsAgo.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`,
     );
 
-    // Generate 50 random receipts
-    const randomReceipts = generateReceiptData(50, startDate, endDate);
+    const allReceipts: ReceiptSeedData[] = [];
 
-    // Generate 5 grouped receipts (simulating multi-category receipts)
-    const groupedReceipts: ReceiptSeedData[] = [];
-    const today = new Date();
+    // Generate 10 receipts for each month (6 months = 60 receipts)
+    const months = [
+      { start: new Date('2025-07-01'), end: new Date('2025-07-31'), count: 10 }, // July
+      { start: new Date('2025-08-01'), end: new Date('2025-08-31'), count: 10 }, // August
+      { start: new Date('2025-09-01'), end: new Date('2025-09-30'), count: 10 }, // September
+      { start: new Date('2025-10-01'), end: new Date('2025-10-31'), count: 10 }, // October
+      { start: new Date('2025-11-01'), end: new Date('2025-11-30'), count: 10 }, // November
+      { start: new Date('2025-12-01'), end: new Date('2025-12-31'), count: 10 }, // December
+    ];
 
-    // Group 1: Walmart - Grocery + Health
-    const group1Date = generateRandomDate(startDate, endDate).toISOString().split('T')[0];
-    const group1Time = new Date(group1Date);
-    groupedReceipts.push(
-      ...generateGroupedReceipts('Walmart', group1Date, group1Time, [
-        { category: 'GROCERY', total: 85.5 },
-        { category: 'HEALTH', total: 24.3 },
-      ]),
-    );
+    console.log('📦 Generating monthly receipts...');
+    months.forEach((month, index) => {
+      console.log(`   Month ${index + 1}: ${month.count} receipts`);
+      const monthlyReceipts = generateReceiptData(month.count, month.start, month.end);
+      allReceipts.push(...monthlyReceipts);
+    });
 
-    // Group 2: Costco - Grocery + Shopping
-    const group2Date = generateRandomDate(startDate, endDate).toISOString().split('T')[0];
-    const group2Time = new Date(group2Date);
-    groupedReceipts.push(
-      ...generateGroupedReceipts('Costco', group2Date, group2Time, [
-        { category: 'GROCERY', total: 120.0 },
-        { category: 'SHOPPING', total: 45.5 },
-      ]),
-    );
+    // Generate 5 receipts for third week of January 2026 (Jan 15-21)
+    console.log('📦 Generating receipts for third week of January 2026 (Jan 15-21)...');
+    const thirdWeekJanStart = new Date('2026-01-15');
+    const thirdWeekJanEnd = new Date('2026-01-21');
+    const thirdWeekReceipts = generateReceiptData(5, thirdWeekJanStart, thirdWeekJanEnd);
+    allReceipts.push(...thirdWeekReceipts);
 
-    // Group 3: Target - Shopping + Entertainment
-    const group3Date = generateRandomDate(startDate, endDate).toISOString().split('T')[0];
-    const group3Time = new Date(group3Date);
-    groupedReceipts.push(
-      ...generateGroupedReceipts('Target', group3Date, group3Time, [
-        { category: 'SHOPPING', total: 65.75 },
-        { category: 'ENTERTAINMENT', total: 29.99 },
-      ]),
-    );
-
-    // Group 4: Whole Foods - Grocery + Restaurant
-    const group4Date = generateRandomDate(startDate, endDate).toISOString().split('T')[0];
-    const group4Time = new Date(group4Date);
-    groupedReceipts.push(
-      ...generateGroupedReceipts('Whole Foods', group4Date, group4Time, [
-        { category: 'GROCERY', total: 95.2 },
-        { category: 'RESTAURANT', total: 18.5 },
-      ]),
-    );
-
-    // Group 5: CVS - Health + Other
-    const group5Date = generateRandomDate(startDate, endDate).toISOString().split('T')[0];
-    const group5Time = new Date(group5Date);
-    groupedReceipts.push(
-      ...generateGroupedReceipts('CVS Pharmacy', group5Date, group5Time, [
-        { category: 'HEALTH', total: 42.15 },
-        { category: 'OTHER', total: 12.3 },
-      ]),
-    );
-
-    // Combine all receipts
-    const allReceipts = [...randomReceipts, ...groupedReceipts];
+    // Generate 2 receipts for today (January 22, 2026)
+    console.log('📦 Generating 2 receipts for today (January 22, 2026)...');
+    const todayReceipts = generateReceiptData(2, today, today);
+    allReceipts.push(...todayReceipts);
 
     console.log(`📝 Creating ${allReceipts.length} receipts...`);
 

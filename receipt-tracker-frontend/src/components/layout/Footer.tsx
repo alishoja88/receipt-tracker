@@ -7,7 +7,7 @@ export const Footer = () => {
   return (
     <footer className="bg-[#1a2332] border-t border-[#2a3442]">
       <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
           {/* Logo and Tagline */}
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-4">
@@ -55,37 +55,6 @@ export const Footer = () => {
                   className="text-gray-400 hover:text-white transition-colors text-base"
                 >
                   Privacy Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Product Column */}
-          <div>
-            <h3 className="text-white font-semibold text-lg mb-4">Product</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  to="/features"
-                  className="text-gray-400 hover:text-white transition-colors text-base"
-                >
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/pricing"
-                  className="text-gray-400 hover:text-white transition-colors text-base"
-                >
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/support"
-                  className="text-gray-400 hover:text-white transition-colors text-base"
-                >
-                  Support
                 </Link>
               </li>
             </ul>
