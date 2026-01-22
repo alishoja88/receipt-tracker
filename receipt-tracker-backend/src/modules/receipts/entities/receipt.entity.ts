@@ -37,7 +37,7 @@ export class Receipt {
   @Column({ name: 'store_name', type: 'varchar', length: 255 })
   storeName: string;
 
-  @Column({ type: 'date' })
+  @Column({ name: 'receipt_date', type: 'date' })
   receiptDate: Date;
 
   @Column({
@@ -48,6 +48,7 @@ export class Receipt {
   category: string | null;
 
   @Column({
+    name: 'payment_method',
     type: 'enum',
     enum: PaymentMethod,
     nullable: true,
@@ -70,18 +71,18 @@ export class Receipt {
   })
   status: ReceiptStatus;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'needs_review', type: 'boolean', default: false })
   needsReview: boolean;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'raw_ocr_text', type: 'text', nullable: true })
   rawOcrText: string | null;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
   imageUrl: string | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

@@ -28,6 +28,6 @@ export class RefreshToken {
   @Column({ name: 'expires_at', type: 'timestamp' })
   expiresAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

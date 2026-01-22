@@ -28,9 +28,9 @@ export class User {
   @OneToMany(() => RefreshToken, refreshToken => refreshToken.user, { cascade: true })
   refreshTokens: RefreshToken[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
