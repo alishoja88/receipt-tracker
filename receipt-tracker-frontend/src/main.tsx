@@ -6,6 +6,8 @@ import './index.css';
 import { router } from './routes';
 import { queryClient } from './lib/api/queryClient';
 
+// Force rebuild for Railway deployment
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
