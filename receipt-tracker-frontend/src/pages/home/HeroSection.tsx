@@ -17,19 +17,6 @@ export const HeroSection = () => {
     }
   };
 
-  const handleDemoClick = () => {
-    if (isAuthenticated) {
-      // If logged in, go to upload page
-      navigate('/upload');
-    } else {
-      // If not logged in, scroll to demo section
-      const demoSection = document.getElementById('try-it-now');
-      if (demoSection) {
-        demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  };
-
   return (
     <section
       className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden"
@@ -73,22 +60,14 @@ export const HeroSection = () => {
             automatically.
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 sm:pt-6 px-4">
             <Button
               size="lg"
               onClick={handleGetStarted}
               className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-semibold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 rounded-xl transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-5px_rgba(59,130,246,0.4)]"
             >
-              Get Started
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleDemoClick}
-              className="w-full sm:w-auto bg-transparent border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 hover:border-blue-400 font-semibold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 rounded-xl transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-5px_rgba(59,130,246,0.4)]"
-            >
-              Upload Demo Receipt
+              Get Started - Try It Now
             </Button>
           </div>
         </div>
