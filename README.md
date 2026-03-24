@@ -1,98 +1,142 @@
-# 📄 receipt-tracker
+# ReceiptTrack
 
-A receipt management and tracking system built with React, NestJS, PostgreSQL, and AI for automatic information extraction from receipt images.
+**Turn paper receipts into actionable financial insights — automatically.**
 
-## 🚀 Features
+ReceiptTrack solves a common problem: manually tracking expenses is tedious, error-prone, and time-consuming. Instead of typing every purchase into a spreadsheet, you upload a photo of your receipt and let **AI extract, categorize, and visualize** everything for you.
 
-- 📸 **Receipt Upload**: Upload receipt images or PDFs
-- 🤖 **Automatic Extraction**: Use OCR and OpenAI to extract information
-- 📊 **Analytics Dashboard**: Display statistics and expense charts
-- 🏪 **Store Management**: Track expenses by store
-- 📁 **Categorization**: Automatic and manual item categorization
-- 🔍 **Search & Filter**: Search and filter by date, store, and category
+Built as a full-stack production-grade application with **React**, **NestJS**, **PostgreSQL**, and **AI integrations** (OCR + LLM).
 
-## 🛠️ Technologies
+**[Live Demo](https://receipts-tracker.up.railway.app/)**
+
+---
+
+## Why This Project Matters
+
+Most expense tracking apps require manual input, which leads to poor adoption and incomplete data.
+
+ReceiptTrack removes friction by automating the entire process — from receipt upload to structured insights — making personal finance tracking effortless.
+
+---
+
+## Product Demo
+
+### Upload & AI Processing
+
+Upload a receipt image and watch AI automatically extract the store name, date, total amount, and category — all in seconds.
+
+![Upload Demo](receipt-tracker-frontend/src/assets/demo-gif/demo-gif-1.gif)
+
+### Dashboard & Analytics
+
+Visualize your spending with an interactive dashboard featuring real-time charts, category breakdowns, and trend analysis.
+
+![Dashboard Demo](receipt-tracker-frontend/src/assets/demo-gif/demo-gif-2.gif)
+
+---
+
+## Features
+
+### Core
+
+- **AI-powered receipt extraction** — OCR reads the receipt, LLM structures the data into clean JSON
+- **Automated categorization** — expenses are auto-tagged (Grocery, Health, Transport, etc.)
+- **Real-time expense dashboard** — track spending trends, totals, and breakdowns at a glance
+- **Smart search & filters** — find any receipt by store, date range, category, or payment method
 
 ### Frontend
-- **React 19** + **TypeScript**
-- **Vite** - Build tool
-- **React Query** - Server state management
-- **Zustand** - Client state management
-- **React Router** - Routing
-- **Recharts** - Charts and visualizations
-- **Axios** - HTTP client
+
+- **Interactive charts** — bar charts, pie charts, and spending-over-time visualizations (Recharts)
+- **Modern dark UI** — glassmorphism design system with teal/cyan accents
+- **Responsive** — works on desktop, tablet, and mobile
+- **Component-based architecture** — clean separation of concerns with reusable components
 
 ### Backend
-- **NestJS** - Node.js framework
-- **TypeORM** - ORM
-- **PostgreSQL** - Database
-- **OpenAI API** - AI text processing
-- **Google Cloud Vision API** - OCR
 
-### DevOps
-- **Docker** & **Docker Compose**
-- **Prettier** - Code formatting
-- **Husky** - Git hooks
-- **ESLint** - Linting
+- **RESTful API** — well-structured NestJS modules with DTOs, guards, and services
+- **Google OAuth** — secure authentication with JWT access/refresh tokens
+- **Database migrations** — TypeORM with versioned schema changes
+- **File processing pipeline** — upload → OCR → LLM parsing → database storage
 
-## 📋 Prerequisites
+---
 
-- **Node.js** 20 or higher
-- **Docker** and **Docker Compose**
-- **PostgreSQL** (or use Docker)
-- **API Keys**:
-  - Google Cloud Vision API (for OCR)
-  - OpenAI API (for text processing)
+## Architecture
 
-## 🚀 Quick Start
-
-### Method 1: With Docker (Recommended)
-
-```bash
-# Clone the project
-git clone <repository-url>
-cd receipt-tracker
-
-# Create .env file in receipt-tracker-backend
-cp receipt-tracker-backend/.env.example receipt-tracker-backend/.env
-# Then add your API keys to .env
-
-# Start with Make
-make up
-
-# Or with Docker Compose directly
-docker-compose -f docker-compose.dev.yml up -d
+```
+Receipt Image → Google Cloud Vision (OCR) → OpenAI (LLM Parsing) → PostgreSQL → Dashboard
 ```
 
-### Method 2: Without Docker
+The pipeline works in three stages:
+
+1. **OCR** — extracts raw text from the receipt image using Google Cloud Vision
+2. **LLM** — sends the raw text to OpenAI to structure it into JSON (store, date, amount, category)
+3. **Storage & Display** — saves structured data to PostgreSQL, renders it in the React dashboard
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, React Query, Zustand, Recharts |
+| **Backend** | NestJS, TypeORM, PostgreSQL, Passport (JWT + Google OAuth) |
+| **AI Services** | Google Cloud Vision API (OCR), OpenAI API (LLM) |
+| **DevOps** | Docker, Docker Compose, Husky, Prettier, ESLint |
+
+---
+
+## Quick Start
+
+### With Docker (Recommended)
 
 ```bash
-# Install dependencies
+git clone https://github.com/alishoja88/receipt-tracker.git
+cd receipt-tracker
+
+# Set up environment variables
+cp receipt-tracker-backend/.env.example receipt-tracker-backend/.env
+# Add your API keys to .env
+
+# Start everything
+make up
+```
+
+### Without Docker
+
+```bash
 make install
 
-# Start PostgreSQL (or use Docker only for DB)
+# Start PostgreSQL
 docker-compose -f docker-compose.dev.yml up -d postgres
 
-# Start Backend
+# Terminal 1: Backend
 make dev-backend
 
-# In another terminal, start Frontend
+# Terminal 2: Frontend
 make dev-frontend
 ```
 
-## 📝 Environment Variables Setup
+### Access
 
-Create `.env` file in `receipt-tracker-backend`:
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:3000 |
+| PostgreSQL | localhost:5432 |
+
+---
+
+## Environment Variables
+
+Create `.env` in `receipt-tracker-backend/`:
 
 ```env
-# Database
-DATABASE_URL=postgres://alinina@localhost:5432/receipts_db
+DATABASE_URL=postgres://user@localhost:5432/receipts_db
 
-# OCR Service (Google Cloud Vision)
+# Google Cloud Vision (OCR)
 OCR_API_KEY=your-google-cloud-vision-api-key
 OCR_API_ENDPOINT=https://vision.googleapis.com/v1/images:annotate
 
-# OpenAI
+# OpenAI (LLM)
 OPENAI_API_KEY=your-openai-api-key
 
 # Server
@@ -100,186 +144,62 @@ PORT=3000
 NODE_ENV=development
 ```
 
-For complete API Keys setup guide, see [API_KEYS_GUIDE.md](./API_KEYS_GUIDE.md).
+---
 
-## 📚 Make Commands
-
-The project includes a complete `Makefile` for easy management:
-
-```bash
-# Show all commands
-make help
-
-# Docker Commands
-make up              # Start Development
-make down            # Stop project
-make logs            # View logs
-make restart         # Restart
-
-# Code Formatting
-make format          # Format all code
-make format-check    # Check formatting
-
-# Database
-make db-shell        # Connect to database
-make db-reset        # Reset database
-
-# Production
-make prod-up         # Start Production
-make prod-down       # Stop Production
-
-# Cleanup
-make clean           # Clean node_modules
-make clean-docker    # Clean Docker resources
-```
-
-For complete command list:
-```bash
-make help
-```
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 receipt-tracker/
-├── receipt-tracker-backend/     # NestJS Backend
-│   ├── src/
-│   │   ├── modules/            # NestJS modules
-│   │   ├── entities/           # TypeORM entities
-│   │   └── main.ts
-│   ├── Dockerfile
-│   └── package.json
+├── receipt-tracker-backend/        # NestJS API
+│   └── src/
+│       ├── modules/auth/           # Google OAuth + JWT
+│       ├── modules/receipts/       # Receipt CRUD + processing
+│       ├── modules/ai/             # OCR + LLM services
+│       ├── modules/expenses/       # Analytics & summaries
+│       └── migrations/             # Database schema versions
 │
-├── receipt-tracker-frontend/    # React Frontend
-│   ├── src/
-│   │   ├── pages/              # Pages
-│   │   ├── components/         # Components
-│   │   ├── api/                # API calls
-│   │   └── hooks/              # Custom hooks
-│   ├── Dockerfile
-│   └── package.json
+├── receipt-tracker-frontend/       # React SPA
+│   └── src/
+│       ├── pages/                  # Route-level pages
+│       ├── components/             # Shared UI components
+│       ├── modules/                # Feature modules (receipts, auth, expenses)
+│       └── store/                  # Zustand state management
 │
-├── docker-compose.yml           # Production
-├── docker-compose.dev.yml       # Development
-├── Makefile                     # Management commands
-└── README.md
+├── docker-compose.yml              # Production
+├── docker-compose.dev.yml          # Development
+└── Makefile                        # Project commands
 ```
-
-## 🔧 Development
-
-### Code Formatting
-
-```bash
-# Format all code
-make format
-
-# Or only backend/frontend
-make format-backend
-make format-frontend
-```
-
-### Tests
-
-**Backend Tests:**
-```bash
-# Run unit tests
-make test
-
-# Run tests in watch mode
-make test-watch
-
-# Run with coverage
-make test-cov
-
-# Run E2E tests
-make test-e2e
-```
-
-**Frontend Tests:**
-```bash
-# Run unit tests
-make test-frontend
-
-# Run tests with UI
-make test-frontend-ui
-
-# Run E2E tests
-make test-frontend-e2e
-
-# Run all tests
-make test-all
-```
-
-For detailed testing guide, see [TESTING_GUIDE.md](./TESTING_GUIDE.md).
-
-### Git Hooks
-
-Husky automatically formats code before commit. No additional work needed!
-
-## 📖 Documentation
-
-- [SETUP_GUIDE.md](./SETUP_GUIDE.md) - Complete setup guide
-- [API_KEYS_GUIDE.md](./API_KEYS_GUIDE.md) - API Keys setup guide
-- [DOCKER_SETUP.md](./DOCKER_SETUP.md) - Docker guide
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Testing guide (Unit & E2E)
-- [receipt-tracker-plan.md](./receipt-tracker-plan.md) - Complete project plan
-
-## 🌐 Service Access
-
-### Development Mode
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000
-- **PostgreSQL**: localhost:5432
-
-### Production Mode
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:3000
-
-## 🐛 Troubleshooting
-
-### Issue: Port already in use
-```bash
-# Check port
-lsof -i :3000
-lsof -i :5432
-lsof -i :5173
-```
-
-### Issue: Container won't start
-```bash
-# View logs
-make logs
-
-# Or for specific service
-make logs-backend
-make logs-frontend
-```
-
-### Issue: Database connection failed
-```bash
-# Check status
-make ps
-
-# Restart
-make restart
-```
-
-## 📝 TODO
-
-- [ ] Add Authentication
-- [ ] Add unit tests
-- [ ] Add CI/CD
-- [ ] Improve UI/UX
-- [ ] Add Export to Excel/PDF
-
-## 📄 License
-
-This project is built for educational and demonstration purposes.
-
-## 👤 Author
-
-Built with ❤️ for learning and development
 
 ---
 
-**Note**: For more information, check the `.md` documentation files in the project.
+## Useful Commands
+
+```bash
+make help            # Show all available commands
+make up              # Start development environment
+make down            # Stop everything
+make logs            # View logs
+make format          # Format all code
+make db-reset        # Reset database
+make test            # Run backend tests
+make test-frontend   # Run frontend tests
+```
+
+---
+
+## About Me
+
+I'm Ali — a front-end focused developer specializing in React and TypeScript.
+
+I built ReceiptTrack to solve a real problem: tracking expenses without manual data entry. This project reflects my approach to building software — clean UI, practical architecture, and meaningful user experience.
+
+This project reflects how I think about building software — clean code, thoughtful UX, and practical AI integration. It's not just a demo; it's a working product I designed, built, and deployed end-to-end.
+
+- [LinkedIn](https://www.linkedin.com/in/alias-shoja/)
+- [GitHub](https://github.com/alishoja88)
+
+---
+
+## License
+
+This project is built for educational and demonstration purposes.
