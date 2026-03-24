@@ -1,24 +1,22 @@
 export const AboutDescriptionSection = () => {
   return (
-    <div
-      className="rounded-2xl p-8 sm:p-10 md:p-12 lg:p-16 max-w-4xl mx-auto"
-      style={{
-        backgroundColor: 'rgba(30, 41, 59, 0.6)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-      }}
-    >
-      <div className="space-y-6 text-base sm:text-lg md:text-xl text-white leading-relaxed">
-        <p>
-          ReceiptTrack is a simple, modern web application that helps you track your expenses by
-          scanning and organizing your receipts. Instead of manually typing every purchase into a
-          spreadsheet, you just upload a photo of your receipt and let the app do the heavy lifting.
-        </p>
-        <p>
-          Using a combination of cloud OCR and AI, ReceiptTrack recognizes key details like the
-          store, date, total amount, and category. You can then review your spending over time,
-          filter by category, and start making better decisions about where your money goes.
+    <div className="-mt-16 mb-24">
+      <div
+        className="mx-auto max-w-[700px] rounded-2xl border-[1.5px] p-10 text-left transition-all duration-300 hover:shadow-[0_16px_48px_rgba(20,184,166,0.2),inset_0_1px_2px_rgba(255,255,255,0.1)] sm:p-12"
+        style={{
+          background: 'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(30,41,59,0.4) 100%)',
+          borderColor: 'rgba(20,184,166,0.28)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          boxShadow: '0 12px 40px rgba(20,184,166,0.15), inset 0 1px 2px rgba(255,255,255,0.08)',
+        }}
+      >
+        <p className="text-base leading-[1.8] text-slate-300">
+          ReceiptTrack is more than just an expense tracker—it's your personal financial assistant.
+          Built with modern technology and user-first design, we help professionals, freelancers,
+          and businesses effortlessly organize their receipts, track expenses, and gain real-time
+          financial insights. Our intelligent system transforms chaotic expense data into actionable
+          financial intelligence, enabling smarter financial decisions.
         </p>
       </div>
     </div>

@@ -23,19 +23,16 @@ export const Pagination = ({
     const maxVisible = 5;
 
     if (totalPages <= maxVisible) {
-      // Show all pages if total pages is less than max visible
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always show first page
       pages.push(1);
 
       if (currentPage > 3) {
         pages.push('...');
       }
 
-      // Show pages around current page
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
@@ -47,7 +44,6 @@ export const Pagination = ({
         pages.push('...');
       }
 
-      // Always show last page
       pages.push(totalPages);
     }
 
@@ -59,31 +55,27 @@ export const Pagination = ({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-slate-700/50">
-      {/* Items Info */}
-      <div className="text-sm text-slate-400">
-        Showing <span className="font-semibold text-slate-300">{startItem}</span> to{' '}
-        <span className="font-semibold text-slate-300">{endItem}</span> of{' '}
-        <span className="font-semibold text-slate-300">{totalItems}</span> receipts
+    <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-6 sm:flex-row">
+      <div className="text-sm text-slate-500">
+        Showing <span className="font-medium text-slate-300">{startItem}</span> to{' '}
+        <span className="font-medium text-slate-300">{endItem}</span> of{' '}
+        <span className="font-medium text-slate-300">{totalItems}</span> receipts
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center gap-2">
-        {/* Previous Button */}
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 bg-slate-800/60 border border-slate-700/80 hover:bg-slate-800/80 hover:border-slate-600/90 disabled:hover:bg-slate-800/60"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.025] text-slate-400 transition-all duration-[180ms] hover:border-white/[0.12] hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
-        {/* Page Numbers */}
         <div className="flex items-center gap-1">
           {getPageNumbers().map((page, index) => {
             if (page === '...') {
               return (
-                <span key={`ellipsis-${index}`} className="px-2 text-slate-500">
+                <span key={`ellipsis-${index}`} className="px-1.5 text-sm text-slate-600">
                   ...
                 </span>
               );
@@ -96,10 +88,10 @@ export const Pagination = ({
               <button
                 key={pageNumber}
                 onClick={() => onPageChange(pageNumber)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition-all duration-[180ms] ${
                   isActive
-                    ? 'bg-blue-500 text-white border border-blue-500'
-                    : 'text-slate-300 bg-slate-800/60 border border-slate-700/80 hover:bg-slate-800/80 hover:border-slate-600/90'
+                    ? 'border border-teal-500/30 bg-teal-500/[0.14] text-teal-300'
+                    : 'border border-white/[0.07] bg-white/[0.025] text-slate-400 hover:border-white/[0.12] hover:bg-white/[0.04]'
                 }`}
               >
                 {pageNumber}
@@ -108,13 +100,12 @@ export const Pagination = ({
           })}
         </div>
 
-        {/* Next Button */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 bg-slate-800/60 border border-slate-700/80 hover:bg-slate-800/80 hover:border-slate-600/90 disabled:hover:bg-slate-800/60"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.025] text-slate-400 transition-all duration-[180ms] hover:border-white/[0.12] hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>

@@ -19,18 +19,20 @@ interface ErrorDialogProps {
 export const ErrorDialog = ({ open, onOpenChange, title, message }: ErrorDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-red-500 text-slate-100">
+      <DialogContent className="border-white/[0.08] bg-[#0e1520] text-white">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <DialogTitle className="text-slate-100">{title}</DialogTitle>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <DialogTitle className="text-white">{title}</DialogTitle>
           </div>
-          <DialogDescription className="text-slate-400 mt-3">{message}</DialogDescription>
+          <DialogDescription className="mt-3 text-slate-400">{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button
             onClick={() => onOpenChange(false)}
-            className="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+            className="rounded-lg bg-teal-500 px-5 py-2 text-sm font-medium text-white transition-all duration-[180ms] hover:bg-teal-600"
           >
             OK
           </Button>

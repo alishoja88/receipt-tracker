@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CloudUpload, Info } from 'lucide-react';
+import { CloudUpload, Info, Image, FileText, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Receipt as ReceiptIcon } from 'lucide-react';
 import {
@@ -35,23 +35,11 @@ const ReceiptUpload = ({
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(selectedFile.type)) {
-      return;
-    }
+    if (!validTypes.includes(selectedFile.type)) return;
+    if (selectedFile.size > 10 * 1024 * 1024) return;
 
-    // Validate file size (10MB)
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      return;
-    }
-
-    // Clear any previous errors when selecting a new file
-    if (error) {
-      // This will be handled by parent component, but we can clear modal state
-      setIsModalOpen(false);
-    }
-
+    if (error) setIsModalOpen(false);
     onFileSelect(selectedFile);
     setIsModalOpen(true);
   };
@@ -68,22 +56,11 @@ const ReceiptUpload = ({
     const droppedFile = e.dataTransfer.files[0];
     if (!droppedFile) return;
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(droppedFile.type)) {
-      return;
-    }
+    if (!validTypes.includes(droppedFile.type)) return;
+    if (droppedFile.size > 10 * 1024 * 1024) return;
 
-    // Validate file size
-    if (droppedFile.size > 10 * 1024 * 1024) {
-      return;
-    }
-
-    // Clear any previous errors when dropping a new file
-    if (error) {
-      setIsModalOpen(false);
-    }
-
+    if (error) setIsModalOpen(false);
     onFileSelect(droppedFile);
     setIsModalOpen(true);
   };
@@ -99,50 +76,28 @@ const ReceiptUpload = ({
 
   const handleUpload = async () => {
     setIsModalOpen(false);
-    if (onUpload) {
-      // onUpload is async, but we don't need to wait for it
-      // Error handling is done in the parent component
-      onUpload();
-    }
+    if (onUpload) onUpload();
   };
 
-  return (
-    <div className="w-full px-3 md:px-4 lg:px-0">
-      {/* Information Banner */}
-      <div
-        className="mb-6 p-4 rounded-lg flex items-start gap-3"
-        style={{
-          backgroundColor: 'rgba(30, 41, 59, 0.5)',
-          border: '1px solid rgba(59, 130, 246, 0.2)',
-        }}
-      >
-        <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#3B82F6' }} />
-        <p className="text-sm" style={{ color: '#F1F5F9' }}>
-          Upload your receipt images and our AI will automatically extract store name, date, amount,
-          payment method, and category for easy tracking.
-        </p>
-      </div>
+  const formatBadges = [
+    { icon: Image, label: 'JPG, PNG' },
+    { icon: FileText, label: 'PDF' },
+    { icon: HardDrive, label: 'Up to 25MB' },
+  ];
 
-      {/* Upload Area - Show when no file selected OR when there's an error (so user can try again) */}
+  return (
+    <div className="w-full">
+      {/* Upload Area */}
       {(!file || error) && (
         <div
-          className="border-2 border-dashed rounded-2xl p-12 md:p-16 text-center transition-all duration-300 ease-in-out relative"
+          className="relative rounded-[28px] border-2 border-dashed p-12 text-center transition-all duration-[200ms] hover:border-teal-400/40 hover:shadow-[0_0_24px_rgba(20,184,166,0.1),0_0_48px_rgba(20,184,166,0.05)] md:p-16"
           style={{
-            borderColor: error ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)',
-            backgroundColor: 'rgba(241, 245, 249, 0.98)',
+            borderColor: error ? 'rgba(239, 68, 68, 0.35)' : 'rgba(45, 212, 191, 0.2)',
+            background: 'linear-gradient(180deg, rgba(18, 27, 39, 0.92), rgba(12, 19, 30, 0.96))',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          onMouseEnter={e => {
-            e.currentTarget.style.borderColor = error ? '#EF4444' : '#3B82F6';
-            e.currentTarget.style.backgroundColor = 'rgba(241, 245, 249, 1)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.borderColor = error
-              ? 'rgba(239, 68, 68, 0.4)'
-              : 'rgba(59, 130, 246, 0.4)';
-            e.currentTarget.style.backgroundColor = 'rgba(241, 245, 249, 0.98)';
-          }}
         >
           <input
             id="receipt-file-input"
@@ -152,92 +107,76 @@ const ReceiptUpload = ({
             onChange={handleFileSelect}
           />
 
-          {/* Upload Icon */}
-          <div className="flex justify-center mb-6">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center"
-              style={{
-                backgroundColor: error ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-              }}
-            >
-              <CloudUpload className="w-10 h-10" style={{ color: error ? '#EF4444' : '#3B82F6' }} />
-            </div>
+          {/* Icon */}
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[22px] border border-teal-500/30 bg-gradient-to-br from-teal-500/20 to-teal-700/10 shadow-lg shadow-teal-950/30">
+            <CloudUpload className="h-11 w-11" style={{ color: error ? '#f87171' : '#2dd4bf' }} />
           </div>
 
-          {/* Text Content */}
-          <h3 className="text-2xl font-bold mb-2" style={{ color: '#0F172A' }}>
+          <h3 className="mb-2 text-2xl font-bold text-white">
             {error ? 'Try uploading again' : 'Drop your receipts here'}
           </h3>
-          <p className="text-base mb-6" style={{ color: '#64748B' }}>
-            {error ? 'Select a different file or try again' : 'or click to browse your files'}
+          <p className="mb-8 text-base text-slate-400">
+            {error ? 'Select a different file or try again' : 'Drag and drop or click to browse'}
           </p>
 
-          {/* Browse Files Button */}
+          <p className="mb-4 text-sm text-slate-500">or</p>
+
           <Button
             onClick={handleBrowseClick}
             size="lg"
-            className={`font-semibold px-8 py-6 text-base ${
+            className={`px-8 py-6 text-base font-semibold shadow-lg ${
               error
-                ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
+                ? 'bg-red-500 shadow-red-950/30 hover:bg-red-600'
+                : 'bg-teal-500 shadow-teal-950/30 hover:bg-teal-600'
+            } text-white`}
           >
             {error ? 'Select New File' : 'Browse Files'}
           </Button>
 
-          {/* File Format Info */}
-          <p className="text-sm mt-6" style={{ color: '#94A3B8' }}>
-            Supports JPG, PNG, PDF up to 10MB
-          </p>
+          {/* File format badges */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {formatBadges.map(b => (
+              <span
+                key={b.label}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-400"
+              >
+                <b.icon className="h-3.5 w-3.5 text-slate-500" />
+                {b.label}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Receipt Selection Modal - Only show when no error */}
+      {/* Receipt Selection Modal */}
       <Dialog
         open={isModalOpen && !error}
         onOpenChange={open => {
-          if (!open) {
-            // If modal is closed (e.g., clicking outside), remove file
-            onFileRemove();
-          }
+          if (!open) onFileRemove();
           setIsModalOpen(open);
         }}
       >
         <DialogContent
-          className="sm:max-w-md"
+          className="border-white/[0.08] sm:max-w-md"
           style={{
-            backgroundColor: '#F0F9FF',
-            border: '2px dashed rgba(59, 130, 246, 0.3)',
+            backgroundColor: '#0e1520',
           }}
         >
           <DialogHeader>
-            <div className="flex flex-col items-center gap-4 mb-4">
-              {/* Receipt Icon */}
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#86EFAC' }}
-              >
-                <ReceiptIcon className="w-8 h-8 text-white" />
+            <div className="mb-4 flex flex-col items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-teal-500/30 bg-teal-500/10">
+                <ReceiptIcon className="h-8 w-8 text-teal-400" />
               </div>
-              <DialogTitle className="text-2xl font-bold text-center" style={{ color: '#0F172A' }}>
+              <DialogTitle className="text-center text-2xl font-bold text-white">
                 Receipt Selected
               </DialogTitle>
             </div>
           </DialogHeader>
 
-          {/* File Info */}
           {file && (
-            <div
-              className="rounded-xl p-4 mb-4 flex items-center gap-3"
-              style={{
-                backgroundColor: '#E0F2FE',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
-              }}
-            >
-              <ReceiptIcon className="w-5 h-5 flex-shrink-0" style={{ color: '#3B82F6' }} />
-              <p className="text-sm font-medium truncate flex-1" style={{ color: '#0F172A' }}>
-                {file.name}
-              </p>
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <ReceiptIcon className="h-5 w-5 flex-shrink-0 text-teal-400" />
+              <p className="flex-1 truncate text-sm font-medium text-slate-200">{file.name}</p>
             </div>
           )}
 
@@ -245,22 +184,13 @@ const ReceiptUpload = ({
             <Button
               variant="outline"
               onClick={handleCancel}
-              className="flex-1"
-              style={{
-                backgroundColor: '#F1F5F9',
-                borderColor: '#E2E8F0',
-                color: '#0F172A',
-              }}
+              className="flex-1 border-white/[0.08] bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpload}
-              className="flex-1"
-              style={{
-                backgroundColor: '#3B82F6',
-                color: 'white',
-              }}
+              className="flex-1 bg-teal-500 text-white hover:bg-teal-600"
             >
               Upload Receipt
             </Button>
@@ -268,32 +198,22 @@ const ReceiptUpload = ({
         </DialogContent>
       </Dialog>
 
-      {/* Error Message with Try Again Button */}
+      {/* Error Message */}
       {error && (
-        <div
-          className="mt-4 p-4 rounded-lg"
-          style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid #EF4444',
-          }}
-        >
-          <div className="flex items-start gap-3 mb-3">
-            <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#EF4444' }} />
+        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/[0.08] p-4">
+          <div className="mb-3 flex items-start gap-3">
+            <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium mb-1" style={{ color: '#EF4444' }}>
-                Upload Failed
-              </p>
-              <p className="text-sm" style={{ color: '#EF4444' }}>
-                {error}
-              </p>
+              <p className="mb-1 text-sm font-medium text-red-300">Upload Failed</p>
+              <p className="text-sm text-red-400/80">{error}</p>
             </div>
           </div>
           {onTryAgain && (
-            <div className="flex gap-2 mt-3">
+            <div className="mt-3 flex gap-2">
               <Button
                 onClick={onTryAgain}
                 size="sm"
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-red-500 text-white hover:bg-red-600"
               >
                 Try Again
               </Button>
@@ -301,7 +221,7 @@ const ReceiptUpload = ({
                 onClick={onFileRemove}
                 size="sm"
                 variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
+                className="border-red-500/30 text-red-300 hover:bg-red-500/10"
               >
                 Cancel
               </Button>

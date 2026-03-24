@@ -1,288 +1,363 @@
-import { useState } from 'react';
-import { CloudUpload, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/store';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  generateMockReceipt,
-  saveDemoReceipt,
-  canAddMoreDemoReceipts,
-  getRemainingDemoUploads,
-} from '@/utils/demoReceipts.util';
-import { DemoReceiptList } from './components/DemoReceiptList';
+  Camera,
+  Zap,
+  ClipboardCheck,
+  BarChart3,
+  CloudUpload,
+  Loader2,
+  CreditCard,
+  Tag,
+  TrendingUp,
+  DollarSign,
+} from 'lucide-react';
 
-export const DemoSection = () => {
-  const { isAuthenticated } = useAuthStore();
-  const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+interface Step {
+  number: number;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+}
 
-  // Redirect to upload if logged in
-  if (isAuthenticated) {
-    return null; // Don't show demo section if user is logged in
-  }
+const steps: Step[] = [
+  {
+    number: 1,
+    icon: Camera,
+    title: 'Upload Receipt',
+    description: 'Snap a photo or upload a document from your device',
+  },
+  {
+    number: 2,
+    icon: Zap,
+    title: 'AI Extracts Data',
+    description: 'Our AI instantly recognizes merchant, date, amount, and category',
+  },
+  {
+    number: 3,
+    icon: ClipboardCheck,
+    title: 'Review & Organize',
+    description: 'Verify details and organize by category with one click',
+  },
+  {
+    number: 4,
+    icon: BarChart3,
+    title: 'View Insights',
+    description: 'Real-time analytics and spending trends at your fingertips',
+  },
+];
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
+/* ─── Step 1: Upload Preview ─── */
+const UploadPreview = () => (
+  <div className="flex h-full flex-col items-center justify-center gap-5 p-10 text-center">
+    <div
+      className="flex w-full max-w-[280px] cursor-pointer flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-teal-500/30 p-10 transition-all duration-300 hover:border-teal-500/50 hover:shadow-[0_0_20px_rgba(20,184,166,0.1)]"
+      style={{
+        background: 'linear-gradient(135deg, rgba(20,184,166,0.05) 0%, rgba(30,41,59,0.08) 100%)',
+      }}
+    >
+      <CloudUpload className="h-12 w-12 text-teal-400/60" />
+      <div>
+        <p className="text-sm font-semibold text-slate-200">Drop receipt here</p>
+        <p className="mt-1 text-xs text-slate-500">or click to browse</p>
+      </div>
+    </div>
+  </div>
+);
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
+/* ─── Step 2: Processing Preview ─── */
+const ProcessingPreview = () => {
+  const [progress, setProgress] = useState(0);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      handleFileSelect(droppedFile);
-    }
-  };
-
-  const handleFileSelect = (selectedFile: File | null) => {
-    if (!selectedFile) return;
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(selectedFile.type)) {
-      setError('Invalid file format. Please select JPG, PNG, or PDF.');
-      return;
-    }
-
-    // Validate file size (10MB)
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size exceeds 10MB. Please select a smaller file.');
-      return;
-    }
-
-    // Check limit
-    if (!canAddMoreDemoReceipts()) {
-      setError(
-        `You can only upload ${getRemainingDemoUploads()} more receipt${getRemainingDemoUploads() !== 1 ? 's' : ''} in demo mode. Sign up to upload unlimited receipts!`,
-      );
-      return;
-    }
-
-    setError(null);
-    setFile(selectedFile);
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null;
-    handleFileSelect(selectedFile);
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-
-    setError(null);
-    setIsProcessing(true);
-    setSuccess(false);
-
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    try {
-      // Generate mock receipt
-      const mockReceipt = generateMockReceipt(file.name);
-
-      // Save to localStorage
-      const saved = saveDemoReceipt(mockReceipt);
-
-      if (!saved) {
-        setError('Failed to save receipt. You may have reached the demo limit.');
-        setIsProcessing(false);
-        return;
-      }
-
-      // Clear file and show success
-      setFile(null);
-      setSuccess(true);
-
-      // Dispatch custom event to update receipt list
-      window.dispatchEvent(new Event('demoReceiptAdded'));
-
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError('Failed to process receipt. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-    setError(null);
-    setSuccess(false);
-  };
-
-  const remainingUploads = getRemainingDemoUploads();
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(p => (p >= 100 ? 0 : p + 2));
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <section id="try-it-now" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-[#0F172A]">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-10 sm:mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6">
-              Try It Now
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400">
-              Upload a sample receipt to see the magic happen (Demo: {remainingUploads} upload
-              {remainingUploads !== 1 ? 's' : ''} remaining)
-            </p>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-red-400">{error}</p>
-              </div>
-              <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300">
-                ×
-              </button>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {success && (
-            <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-              <p className="text-sm text-green-400">
-                Receipt processed successfully!{' '}
-                {remainingUploads > 0 &&
-                  `You can upload ${remainingUploads} more receipt${remainingUploads !== 1 ? 's' : ''}.`}
-              </p>
-            </div>
-          )}
-
-          {/* Upload Area */}
-          {!file && !isProcessing && (
-            <div
-              className={`
-                relative
-                border-2 border-dashed rounded-2xl
-                p-8 sm:p-12 md:p-16 lg:p-20
-                text-center
-                cursor-pointer
-                transition-all duration-300 ease-in-out
-                ${
-                  isDragging
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : 'border-[rgba(59,130,246,0.4)] bg-[rgba(30,41,59,0.3)] hover:border-blue-500 hover:bg-[rgba(59,130,246,0.05)]'
-                }
-                ${remainingUploads === 0 ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={() => {
-                if (remainingUploads > 0) {
-                  document.getElementById('file-upload')?.click();
-                }
-              }}
-            >
-              {/* Hidden File Input */}
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                accept=".jpg,.jpeg,.png,.pdf"
-                onChange={handleFileInputChange}
-                disabled={remainingUploads === 0}
-              />
-
-              {/* Upload Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[rgba(59,130,246,0.1)] flex items-center justify-center">
-                  <CloudUpload className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-blue-500" />
-                </div>
-              </div>
-
-              {/* Upload Text */}
-              <div className="space-y-2 sm:space-y-3">
-                <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
-                  {remainingUploads === 0
-                    ? 'Demo limit reached'
-                    : 'Click to upload or drag and drop'}
-                </p>
-                <p className="text-sm sm:text-base md:text-lg text-gray-400">
-                  {remainingUploads === 0
-                    ? 'Sign up to upload unlimited receipts!'
-                    : 'Supports JPG, PNG, PDF (Max 10MB)'}
-                </p>
-              </div>
-
-              {/* Drag Overlay */}
-              {isDragging && (
-                <div className="absolute inset-0 bg-blue-500/5 rounded-2xl flex items-center justify-center">
-                  <p className="text-xl sm:text-2xl font-semibold text-blue-400">
-                    Drop your receipt here
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* File Selected / Processing */}
-          {file && (
-            <div className="border-2 border-dashed border-blue-500 rounded-2xl p-8 bg-[rgba(30,41,59,0.3)]">
-              <div className="text-center space-y-4">
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
-                    <p className="text-lg font-semibold text-white">Processing receipt...</p>
-                    <p className="text-sm text-gray-400">
-                      Please wait while we extract and analyze your receipt
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-green-400" />
-                      </div>
-                      <p className="text-lg font-semibold text-white">{file.name}</p>
-                    </div>
-                    <div className="flex gap-3 justify-center">
-                      <button
-                        onClick={handleUpload}
-                        className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        Process Receipt
-                      </button>
-                      <button
-                        onClick={handleRemoveFile}
-                        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Demo Receipts List */}
-          <DemoReceiptList />
+    <div className="flex h-full flex-col items-center justify-center gap-6 p-10 text-center">
+      <div className="relative">
+        <Loader2 className="h-14 w-14 animate-spin text-teal-400" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-200">Extracting data...</p>
+        <p className="mt-1 text-xs text-slate-500">Analyzing receipt with AI</p>
+      </div>
+      <div className="w-48">
+        <div className="h-1.5 overflow-hidden rounded-full bg-slate-700/60">
+          <div
+            className="h-full rounded-full transition-all duration-100"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, #2dd4bf, #06b6d4)',
+            }}
+          />
         </div>
       </div>
+    </div>
+  );
+};
+
+/* ─── Step 3: Receipt List Preview ─── */
+const receiptPreviewData = [
+  {
+    store: 'Whole Foods Market',
+    date: 'Mar 22, 2026',
+    amount: '$47.92',
+    category: 'Grocery',
+    payment: 'Card',
+  },
+  {
+    store: 'Shell Gas Station',
+    date: 'Mar 21, 2026',
+    amount: '$38.50',
+    category: 'Transport',
+    payment: 'Card',
+  },
+  {
+    store: 'Starbucks Coffee',
+    date: 'Mar 20, 2026',
+    amount: '$6.75',
+    category: 'Food & Dining',
+    payment: 'Cash',
+  },
+];
+
+const ReceiptListPreview = () => (
+  <div className="flex h-full flex-col overflow-hidden">
+    {receiptPreviewData.map((r, i) => (
+      <div
+        key={r.store}
+        className="flex items-center justify-between border-b border-teal-500/[0.08] px-5 py-4"
+        style={{ animation: `demoSlideIn 400ms ease ${i * 120}ms both` }}
+      >
+        <div className="flex-1">
+          <p className="text-[13px] font-bold text-slate-100">{r.store}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-[11px] text-slate-500">{r.date}</span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-teal-500/20 bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal-400">
+              <Tag className="h-2.5 w-2.5" />
+              {r.category}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/20 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">
+              <CreditCard className="h-2.5 w-2.5" />
+              {r.payment}
+            </span>
+          </div>
+        </div>
+        <p className="text-sm font-bold text-teal-400">{r.amount}</p>
+      </div>
+    ))}
+  </div>
+);
+
+/* ─── Step 4: Dashboard Preview ─── */
+const barHeights = [45, 72, 58, 85, 65, 92, 78];
+
+const DashboardPreview = () => (
+  <div className="flex h-full flex-col gap-4 overflow-hidden p-5">
+    <p className="text-xs font-bold text-slate-400">Monthly Overview</p>
+
+    {/* Stat cards */}
+    <div className="grid grid-cols-2 gap-3">
+      {[
+        { label: 'Total Spent', value: '$1,247.50', icon: DollarSign },
+        { label: 'Avg / Receipt', value: '$31.19', icon: TrendingUp },
+      ].map(s => {
+        const Icon = s.icon;
+        return (
+          <div
+            key={s.label}
+            className="flex flex-col gap-1.5 rounded-xl border border-teal-500/15 p-3"
+            style={{
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(30,41,59,0.12))',
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <Icon className="h-3 w-3 text-teal-400" />
+              <span className="text-[10px] font-semibold text-slate-500">{s.label}</span>
+            </div>
+            <span
+              className="text-lg font-extrabold"
+              style={{
+                background: 'linear-gradient(135deg, #2dd4bf, #06b6d4)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              {s.value}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Mini bar chart */}
+    <div className="flex flex-1 items-end justify-around gap-2 pb-2 pt-1">
+      {barHeights.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-t"
+          style={{
+            height: `${h}%`,
+            background: `linear-gradient(180deg, rgba(45,212,191,0.4) 0%, rgba(20,184,166,0.1) 100%)`,
+            border: '1px solid rgba(20,184,166,0.2)',
+            animation: `demoGrowUp 600ms cubic-bezier(0.34,1.56,0.64,1) ${i * 80}ms both`,
+          }}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+/* ─── Step previews map ─── */
+const previews = [UploadPreview, ProcessingPreview, ReceiptListPreview, DashboardPreview];
+
+/* ─── Main DemoSection ─── */
+export const DemoSection = () => {
+  const [activeStep, setActiveStep] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const advanceStep = useCallback(() => {
+    setActiveStep(prev => (prev + 1) % steps.length);
+  }, []);
+
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    const timer = setInterval(advanceStep, 4000);
+    return () => clearInterval(timer);
+  }, [isAutoPlaying, advanceStep]);
+
+  const handleStepClick = (index: number) => {
+    setActiveStep(index);
+    setIsAutoPlaying(false);
+  };
+
+  const ActivePreview = previews[activeStep];
+
+  return (
+    <section id="demo-section" className="relative py-24 sm:py-32 lg:py-40">
+      {/* Header */}
+      <div className="mx-auto mb-14 max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <h2 className="mb-4 text-3xl font-extrabold text-slate-100 sm:text-4xl md:text-[42px]">
+          See ReceiptTrack in Action
+        </h2>
+        <p className="text-lg leading-relaxed text-slate-300">
+          Watch how easy it is to turn receipts into actionable expense insights
+        </p>
+      </div>
+
+      {/* Demo container */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="overflow-hidden rounded-3xl border-[1.5px] p-8 sm:p-10 lg:p-12"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(30,41,59,0.2) 100%)',
+            borderColor: 'rgba(20,184,166,0.25)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            boxShadow: '0 20px 60px rgba(20,184,166,0.15), inset 0 1px 2px rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            {/* Left - Steps */}
+            <div className="flex flex-col gap-5">
+              {steps.map((step, i) => {
+                const Icon = step.icon;
+                const isActive = i === activeStep;
+                return (
+                  <button
+                    key={step.number}
+                    onClick={() => handleStepClick(i)}
+                    className={`group flex items-start gap-4 rounded-xl border px-5 py-5 text-left transition-all duration-300 ${
+                      isActive
+                        ? 'border-teal-500/35 shadow-[0_0_20px_rgba(20,184,166,0.15)]'
+                        : 'border-teal-500/10 hover:border-teal-500/20 hover:translate-x-1'
+                    }`}
+                    style={{
+                      background: isActive
+                        ? 'linear-gradient(135deg, rgba(20,184,166,0.15) 0%, rgba(6,182,212,0.08) 100%)'
+                        : 'rgba(20,184,166,0.04)',
+                    }}
+                  >
+                    <div
+                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border-[1.5px] text-lg font-extrabold transition-all duration-250 ${
+                        isActive
+                          ? 'border-teal-500/50 text-teal-400 shadow-[0_0_16px_rgba(20,184,166,0.25)]'
+                          : 'border-teal-500/20 text-teal-500/60'
+                      }`}
+                      style={{
+                        background: isActive
+                          ? 'linear-gradient(135deg, rgba(20,184,166,0.28) 0%, rgba(6,182,212,0.15) 100%)'
+                          : 'linear-gradient(135deg, rgba(20,184,166,0.1) 0%, rgba(6,182,212,0.05) 100%)',
+                      }}
+                    >
+                      {step.number}
+                    </div>
+                    <div className="pt-0.5">
+                      <p className="flex items-center gap-2 text-base font-bold text-slate-100">
+                        <Icon
+                          className={`h-4 w-4 ${isActive ? 'text-teal-400' : 'text-slate-500'}`}
+                        />
+                        {step.title}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">{step.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right - Live Preview */}
+            <div
+              className="relative overflow-hidden rounded-[20px] border-[1.5px]"
+              style={{
+                borderColor: 'rgba(20,184,166,0.22)',
+                background:
+                  'linear-gradient(135deg, rgba(10,10,25,0.8) 0%, rgba(20,30,50,0.6) 100%)',
+                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), 0 0 30px rgba(20,184,166,0.08)',
+                minHeight: 420,
+              }}
+            >
+              {/* Window dots bar */}
+              <div className="flex gap-2 border-b border-teal-500/[0.12] bg-[rgba(10,10,25,0.5)] px-4 py-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
+                <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+              </div>
+
+              {/* Preview content with fade transition */}
+              <div className="relative h-[380px]">
+                <div
+                  key={activeStep}
+                  className="absolute inset-0"
+                  style={{ animation: 'demoFadeIn 400ms cubic-bezier(0.4,0,0.2,1)' }}
+                >
+                  <ActivePreview />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes demoFadeIn {
+          from { opacity: 0; transform: scale(0.98) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes demoSlideIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes demoGrowUp {
+          from { transform: scaleY(0); transform-origin: bottom; }
+          to { transform: scaleY(1); transform-origin: bottom; }
+        }
+      `}</style>
     </section>
   );
 };

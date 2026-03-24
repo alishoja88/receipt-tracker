@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { AnalyticsStats } from './analytics/components/AnalyticsStats';
 import { DashboardFilters } from './analytics/components/DashboardFilters';
 import { SpendingOverTimeChart } from './analytics/components/SpendingOverTimeChart';
@@ -24,6 +24,76 @@ interface DashboardFiltersState {
   dateTo: string;
   selectedCategories: string[];
 }
+
+interface DashboardSectionCardProps {
+  title: string;
+  description: string;
+  badge?: string;
+  badgeColor?: string;
+  withSurface?: boolean;
+  children: ReactNode;
+}
+
+const DashboardSectionCard = ({
+  title,
+  description,
+  badge,
+  badgeColor,
+  withSurface = true,
+  children,
+}: DashboardSectionCardProps) => (
+  <section
+    className="relative overflow-hidden rounded-[28px] border border-white/[0.08] p-6 transition-all duration-[180ms] ease-out hover:-translate-y-0.5 hover:border-white/[0.12] md:p-7 lg:p-10"
+    style={{
+      background: 'linear-gradient(180deg, rgba(18, 27, 39, 0.92), rgba(12, 19, 30, 0.96))',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)',
+      backdropFilter: 'blur(8px)',
+    }}
+  >
+    <header className="mb-5 flex items-start justify-between gap-4">
+      <div>
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
+        <p className="mt-1 text-sm text-slate-400">{description}</p>
+      </div>
+      {badge && (
+        <span
+          className={`flex-shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
+            badgeColor || 'border-teal-500/30 bg-teal-500/10 text-teal-300'
+          }`}
+        >
+          {badge}
+        </span>
+      )}
+    </header>
+    {withSurface ? (
+      <div
+        className="relative z-[1] rounded-[22px] border border-white/[0.07] p-5 sm:p-6 md:p-7"
+        style={{
+          background: 'linear-gradient(180deg, rgba(14, 21, 32, 0.88), rgba(10, 16, 25, 0.92))',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3)',
+        }}
+      >
+        {children}
+      </div>
+    ) : (
+      children
+    )}
+  </section>
+);
+
+const ChartLoadingSkeleton = () => (
+  <div className="h-[300px] animate-pulse space-y-4">
+    <div className="h-3 w-2/5 rounded-full bg-white/[0.04]" />
+    <div className="h-3 w-1/3 rounded-full bg-white/[0.03]" />
+    <div className="mt-6 h-[220px] rounded-xl bg-white/[0.03]" />
+  </div>
+);
+
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="flex h-[280px] items-center justify-center rounded-xl border border-dashed border-white/[0.08] text-sm text-slate-500">
+    {message}
+  </div>
+);
 
 const DashboardPage = () => {
   const getInitialDates = () => {
@@ -388,105 +458,137 @@ const DashboardPage = () => {
     summaryLoading || dailyLoading || categoryLoading || storeLoading || paymentMethodLoading;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0F172A' }}>
-      {/* Header Section */}
-      <div className="w-full py-8 px-3 md:px-4 lg:px-0" style={{ backgroundColor: '#0F172A' }}>
-        <div className="container mx-auto max-w-7xl">
-          <h1 className="text-3xl font-bold text-white mb-2">Analytics Dashboard</h1>
-          <p className="text-base text-slate-400">Track your spending patterns and insights</p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div
+          className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #14b8a6, transparent 70%)' }}
+        />
+        <div
+          className="absolute -right-40 -top-20 h-[500px] w-[500px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }}
+        />
       </div>
 
-      {/* Stats Cards Section */}
-      <div className="container mx-auto max-w-7xl pb-8 space-y-6 px-3 md:px-4 lg:px-0">
-        <AnalyticsStats {...statsData} />
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        {/* Page header */}
+        <header className="mb-12">
+          <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+            Analytics Dashboard
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+            Monitor spending trends, category distribution, top vendors, and payment behavior.
+          </p>
+        </header>
 
-        {/* Filters Section */}
-        <DashboardFilters onFiltersChange={handleFiltersChange} />
-
-        {/* Charts Section - Row 1: Spending Over Time and Spending by Category */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          {/* Spending Over Time Chart */}
-          <div className="lg:col-span-1 h-full">
-            {isLoading ? (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">Loading...</p>
-              </div>
-            ) : spendingOverTimeData.length > 0 ? (
-              <SpendingOverTimeChart
-                data={spendingOverTimeData}
-                dateFrom={filters.dateFrom}
-                dateTo={filters.dateTo}
-                selectedCategories={filters.selectedCategories}
-              />
-            ) : (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">No data available for the selected period</p>
-              </div>
-            )}
+        <main className="space-y-10 lg:space-y-12">
+          {/* ---- Overview stats ---- */}
+          <div>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Overview
+            </p>
+            <AnalyticsStats {...statsData} />
           </div>
 
-          {/* Spending by Category Chart */}
-          <div className="lg:col-span-1 h-full">
-            {isLoading ? (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">Loading...</p>
-              </div>
-            ) : spendingByCategoryData.length > 0 ? (
-              <SpendingByCategoryChart
-                data={spendingByCategoryData}
-                dateFrom={filters.dateFrom}
-                dateTo={filters.dateTo}
-                selectedCategories={filters.selectedCategories}
-              />
-            ) : (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">No categories selected</p>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* ---- Filters ---- */}
+          <DashboardSectionCard
+            title="Refine insights"
+            description="Use compact filters to focus the story without crowding the dashboard."
+            badge={`${filters.selectedCategories.length} groups active`}
+            badgeColor="border-slate-500/30 bg-slate-500/10 text-slate-300"
+            withSurface={false}
+          >
+            <DashboardFilters onFiltersChange={handleFiltersChange} />
+          </DashboardSectionCard>
 
-        {/* Charts Section - Row 2: Top Stores and Payment Methods */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          {/* Top Stores Chart */}
-          <div className="lg:col-span-1 h-full">
-            {isLoading ? (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">Loading...</p>
-              </div>
-            ) : storeExpenses && storeExpenses.items.length > 0 ? (
-              <TopStoresChart
-                data={storeExpenses.items}
-                dateFrom={filters.dateFrom}
-                dateTo={filters.dateTo}
-              />
-            ) : (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">No store data available</p>
-              </div>
-            )}
-          </div>
+          {/* ---- Analytics modules ---- */}
+          <div>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Analytics Modules
+            </p>
 
-          {/* Payment Methods Card */}
-          <div className="lg:col-span-1 h-full">
-            {isLoading ? (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">Loading...</p>
-              </div>
-            ) : paymentMethodExpenses && paymentMethodExpenses.items.length > 0 ? (
-              <PaymentMethodsCard
-                data={paymentMethodExpenses.items}
-                dateFrom={filters.dateFrom}
-                dateTo={filters.dateTo}
-              />
-            ) : (
-              <div className="bg-white rounded-lg p-6 h-[400px] flex items-center justify-center">
-                <p className="text-slate-500">No payment method data available</p>
-              </div>
-            )}
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-6">
+              {/* Spending Over Time */}
+              <DashboardSectionCard
+                title="Spending Over Time"
+                description="Daily spend pattern with a softer chart surface for easier reading."
+                badge="Trend"
+              >
+                {isLoading ? (
+                  <ChartLoadingSkeleton />
+                ) : spendingOverTimeData.length > 0 ? (
+                  <SpendingOverTimeChart
+                    data={spendingOverTimeData}
+                    dateFrom={filters.dateFrom}
+                    dateTo={filters.dateTo}
+                    selectedCategories={filters.selectedCategories}
+                  />
+                ) : (
+                  <EmptyState message="No data available for the selected period." />
+                )}
+              </DashboardSectionCard>
+
+              {/* Spending by Category */}
+              <DashboardSectionCard
+                title="Spending by Category"
+                description="Clear category mix with softer contrasts and a premium card shell."
+                badge="Mix"
+              >
+                {isLoading ? (
+                  <ChartLoadingSkeleton />
+                ) : spendingByCategoryData.length > 0 ? (
+                  <SpendingByCategoryChart
+                    data={spendingByCategoryData}
+                    dateFrom={filters.dateFrom}
+                    dateTo={filters.dateTo}
+                    selectedCategories={filters.selectedCategories}
+                  />
+                ) : (
+                  <EmptyState message="No categories selected." />
+                )}
+              </DashboardSectionCard>
+
+              {/* Top Stores */}
+              <DashboardSectionCard
+                title="Top Stores"
+                description="Store ranking with more whitespace and calmer bar styling."
+                badge="Vendors"
+              >
+                {isLoading ? (
+                  <ChartLoadingSkeleton />
+                ) : storeExpenses && storeExpenses.items.length > 0 ? (
+                  <TopStoresChart
+                    data={storeExpenses.items}
+                    dateFrom={filters.dateFrom}
+                    dateTo={filters.dateTo}
+                  />
+                ) : (
+                  <EmptyState message="No store data available." />
+                )}
+              </DashboardSectionCard>
+
+              {/* Payment Methods */}
+              <DashboardSectionCard
+                title="Payment Methods"
+                description="Balanced method distribution displayed in a lightweight card layout."
+                badge="Behavior"
+              >
+                {isLoading ? (
+                  <ChartLoadingSkeleton />
+                ) : paymentMethodExpenses && paymentMethodExpenses.items.length > 0 ? (
+                  <PaymentMethodsCard
+                    data={paymentMethodExpenses.items}
+                    dateFrom={filters.dateFrom}
+                    dateTo={filters.dateTo}
+                  />
+                ) : (
+                  <EmptyState message="No payment method data available." />
+                )}
+              </DashboardSectionCard>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

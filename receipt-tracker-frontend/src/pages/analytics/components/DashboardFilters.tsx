@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, Clock, Tag } from 'lucide-react';
 import { categories } from '../../receipt-management/utils/receiptUtils';
 
 type TimePeriodPreset = 'today' | 'thisWeek' | 'thisMonth' | 'thisYear' | 'custom';
@@ -13,6 +13,13 @@ interface DashboardFiltersProps {
   }) => void;
 }
 
+const presetOptions: { key: TimePeriodPreset; label: string }[] = [
+  { key: 'today', label: 'Today' },
+  { key: 'thisWeek', label: '7D' },
+  { key: 'thisMonth', label: '30D' },
+  { key: 'thisYear', label: '1Y' },
+];
+
 export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => {
   const [preset, setPreset] = useState<TimePeriodPreset>('thisMonth');
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -21,7 +28,6 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
     categories.map(cat => cat.value),
   );
 
-  // Calculate date ranges for presets
   const getDateRange = (presetType: TimePeriodPreset): { from: string; to: string } => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -33,7 +39,7 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
       }
       case 'thisWeek': {
         const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+        weekStart.setDate(today.getDate() - today.getDay());
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
@@ -51,7 +57,6 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
       }
       case 'thisYear': {
         const yearStart = new Date(today.getFullYear(), 0, 1);
-        // Use today as end date instead of end of year (since we don't have future data)
         const yearEnd = today;
         return {
           from: yearStart.toISOString().split('T')[0],
@@ -63,7 +68,6 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
     }
   };
 
-  // Handle preset selection
   const handlePresetSelect = (presetType: TimePeriodPreset) => {
     setPreset(presetType);
     if (presetType !== 'custom') {
@@ -79,18 +83,13 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
     }
   };
 
-  // Handle date change (custom dates)
   const handleDateChange = (type: 'from' | 'to', value: string) => {
     const newDateFrom = type === 'from' ? value : dateFrom;
     const newDateTo = type === 'to' ? value : dateTo;
 
-    if (type === 'from') {
-      setDateFrom(value);
-    } else {
-      setDateTo(value);
-    }
+    if (type === 'from') setDateFrom(value);
+    else setDateTo(value);
 
-    // When user manually selects dates, switch to custom preset
     setPreset('custom');
     onFiltersChange?.({
       preset: 'custom',
@@ -100,7 +99,6 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
     });
   };
 
-  // Handle category toggle
   const handleCategoryToggle = (categoryValue: string) => {
     const newSelected = selectedCategories.includes(categoryValue)
       ? selectedCategories.filter(cat => cat !== categoryValue)
@@ -115,7 +113,6 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
     });
   };
 
-  // Initialize dates on mount
   useEffect(() => {
     const range = getDateRange(preset);
     setDateFrom(range.from);
@@ -130,144 +127,95 @@ export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => 
   }, []);
 
   return (
-    <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* TIME PERIOD Section */}
-        <div className="flex-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white mb-4">
-            TIME PERIOD
-          </h3>
-
-          {/* Preset Buttons */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <button
-              onClick={() => handlePresetSelect('today')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                preset === 'today'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => handlePresetSelect('thisWeek')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                preset === 'thisWeek'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              This Week
-            </button>
-            <button
-              onClick={() => handlePresetSelect('thisMonth')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                preset === 'thisMonth'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              This Month
-            </button>
-            <button
-              onClick={() => handlePresetSelect('thisYear')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                preset === 'thisYear'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              This Year
-            </button>
-          </div>
-
-          {/* Date Pickers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* From Date */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                From Date
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  id="dashboard-date-from-input"
-                  value={dateFrom}
-                  onChange={e => handleDateChange('from', e.target.value)}
-                  className="w-full px-4 py-2 pr-10 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-                  style={{ colorScheme: 'dark' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById(
-                      'dashboard-date-from-input',
-                    ) as HTMLInputElement | null;
-                    input?.showPicker?.() || input?.click();
-                  }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white cursor-pointer hover:text-blue-400 transition-colors"
-                  aria-label="Open date picker"
-                >
-                  <Calendar className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* To Date */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                To Date
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  id="dashboard-date-to-input"
-                  value={dateTo}
-                  onChange={e => handleDateChange('to', e.target.value)}
-                  className="w-full px-4 py-2 pr-10 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-                  style={{ colorScheme: 'dark' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById(
-                      'dashboard-date-to-input',
-                    ) as HTMLInputElement | null;
-                    input?.showPicker?.() || input?.click();
-                  }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white cursor-pointer hover:text-blue-400 transition-colors"
-                  aria-label="Open date picker"
-                >
-                  <Calendar className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Time period */}
+      <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-white/[0.015] p-4">
+        <div className="mb-3 flex items-center gap-2.5">
+          <Clock className="h-4 w-4 text-slate-500" />
+          <div>
+            <p className="text-sm font-medium text-slate-200">Time period</p>
+            <p className="text-xs text-slate-500">Quick range presets</p>
           </div>
         </div>
 
-        {/* CATEGORIES Section */}
-        <div className="flex-1">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white mb-4">
-            CATEGORIES
-          </h3>
+        <div className="flex gap-2">
+          {presetOptions.map(p => (
+            <button
+              key={p.key}
+              onClick={() => handlePresetSelect(p.key)}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[180ms] ${
+                preset === p.key
+                  ? 'border border-teal-500/30 bg-teal-500/[0.14] text-teal-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                  : 'border border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-slate-300'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {categories.map(category => (
-              <label
-                key={category.value}
-                className="flex items-center gap-2 cursor-pointer hover:bg-slate-700/50 rounded-lg p-2 transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedCategories.includes(category.value)}
-                  onChange={() => handleCategoryToggle(category.value)}
-                  className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                />
-                <span className="text-sm text-white font-medium">{category.label}</span>
-              </label>
-            ))}
+      {/* Date range */}
+      <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-white/[0.015] p-4">
+        <div className="mb-3 flex items-center gap-2.5">
+          <Calendar className="h-4 w-4 text-slate-500" />
+          <div>
+            <p className="text-sm font-medium text-slate-200">Date range</p>
+            <p className="text-xs text-slate-500">Custom boundaries</p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-xs text-slate-500">From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => handleDateChange('from', e.target.value)}
+              className="h-10 w-full rounded-lg border border-white/[0.08] bg-slate-900/60 px-3 text-sm text-slate-200 transition-colors duration-[180ms] focus:border-teal-500/50 focus:outline-none [&::-webkit-calendar-picker-indicator]:invert"
+              style={{ colorScheme: 'dark' }}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500">To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => handleDateChange('to', e.target.value)}
+              className="h-10 w-full rounded-lg border border-white/[0.08] bg-slate-900/60 px-3 text-sm text-slate-200 transition-colors duration-[180ms] focus:border-teal-500/50 focus:outline-none [&::-webkit-calendar-picker-indicator]:invert"
+              style={{ colorScheme: 'dark' }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-white/[0.015] p-4">
+        <div className="mb-3 flex items-center gap-2.5">
+          <Tag className="h-4 w-4 text-slate-500" />
+          <div>
+            <p className="text-sm font-medium text-slate-200">Categories</p>
+            <p className="text-xs text-slate-500">Multi-select filters</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {categories.map(cat => {
+            const isOn = selectedCategories.includes(cat.value);
+            return (
+              <button
+                key={cat.value}
+                onClick={() => handleCategoryToggle(cat.value)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-[180ms] ${
+                  isOn
+                    ? 'border border-teal-500/30 bg-teal-500/[0.14] text-teal-300'
+                    : 'border border-white/[0.06] text-slate-400 hover:border-white/[0.10] hover:text-slate-300'
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

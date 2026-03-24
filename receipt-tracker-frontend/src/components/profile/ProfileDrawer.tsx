@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Edit2, Check, Mail, LogOut, User } from 'lucide-react';
+import { X, Edit2, Check, Mail, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { useUiStore } from '@/store';
-import { Button } from '@/components/ui/button';
 
 export const ProfileDrawer = () => {
   const { user, logout, updateUserName, fetchUserProfile } = useAuthStore();
@@ -11,26 +10,14 @@ export const ProfileDrawer = () => {
   const [nameValue, setNameValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch user profile when drawer opens
   useEffect(() => {
     if (profileDrawerOpen && user) {
-      console.log('🎨 PROFILE DRAWER - Opening with user:', {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      });
       fetchUserProfile().catch(console.error);
     }
   }, [profileDrawerOpen, fetchUserProfile]);
 
-  // Update name value when user changes
   useEffect(() => {
     if (user) {
-      console.log('🎨 PROFILE DRAWER - User changed, updating display:', {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      });
       setNameValue(user.name || user.email.split('@')[0]);
     }
   }, [user]);
@@ -45,14 +32,12 @@ export const ProfileDrawer = () => {
       setIsEditingName(false);
       return;
     }
-
     setIsSaving(true);
     try {
       await updateUserName(nameValue.trim());
       setIsEditingName(false);
     } catch (error) {
       console.error('Failed to update name:', error);
-      // Optionally show error toast
     } finally {
       setIsSaving(false);
     }
@@ -62,14 +47,12 @@ export const ProfileDrawer = () => {
     try {
       await logout();
       handleClose();
-      // Redirect to home page
       window.location.href = '/';
     } catch (error) {
       console.error('Failed to logout:', error);
     }
   };
 
-  // Get user initials for avatar
   const getUserInitials = () => {
     if (!user) return 'U';
     const name = user.name || user.email;
@@ -80,187 +63,224 @@ export const ProfileDrawer = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const displayName = user?.name || user?.email.split('@')[0] || '';
+
   if (!profileDrawerOpen) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
-        style={{ animation: 'fadeIn 0.3s ease-out' }}
+        style={{ animation: 'drawerFadeIn 0.3s ease-out' }}
       />
 
       {/* Drawer */}
       <div
-        className="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-[#1E293B] shadow-2xl z-50 flex flex-col"
-        style={{ animation: 'slideIn 0.3s ease-out' }}
+        className="fixed right-0 top-0 z-50 flex h-full w-full flex-col overflow-hidden sm:w-[420px]"
+        style={{
+          background: 'linear-gradient(180deg, #0c1422 0%, #0a1018 100%)',
+          boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
+          animation: 'drawerSlideIn 0.3s ease-out',
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-bold text-white">Profile</h2>
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-7 py-5">
+          <h2 className="text-2xl font-extrabold text-slate-100">Profile</h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-400 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.08] hover:text-slate-200"
           >
-            <X className="w-6 h-6 text-gray-400" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {/* Account Information Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-white">Account Information</h3>
-
-            {/* Avatar and User Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                {getUserInitials()}
-              </div>
-              <div className="flex-1">
-                <p className="text-xl font-semibold text-white">
-                  {user?.name || user?.email.split('@')[0]}
-                </p>
-                <p className="text-gray-400">{user?.email}</p>
-              </div>
+        {/* Scrollable content */}
+        <div className="flex-1 space-y-7 overflow-y-auto px-7 py-6">
+          {/* ── User Card ── */}
+          <div
+            className="flex items-center gap-4 rounded-2xl border border-teal-500/[0.12] p-5"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(20,184,166,0.06) 0%, rgba(30,41,59,0.15) 100%)',
+            }}
+          >
+            <div
+              className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border-2 border-teal-500/40 text-xl font-bold text-teal-400"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(20,184,166,0.2) 0%, rgba(6,182,212,0.1) 100%)',
+                boxShadow: '0 0 0 6px rgba(20,184,166,0.08)',
+              }}
+            >
+              {getUserInitials()}
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-lg font-bold text-slate-100">{displayName}</p>
+              <p className="truncate text-sm text-slate-500">{user?.email}</p>
+            </div>
+          </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-700" />
+          {/* ── Account Settings ── */}
+          <div>
+            <h3
+              className="mb-4 text-xs font-bold uppercase tracking-[1px]"
+              style={{
+                background: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Account Settings
+            </h3>
 
-            {/* Name Field */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-                  Name
+            <div className="space-y-4">
+              {/* Full Name */}
+              <div>
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-slate-500">
+                  Full Name
                 </label>
-                {!isEditingName && (
-                  <button
-                    onClick={() => setIsEditingName(true)}
-                    className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm font-medium"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit
-                  </button>
+                {isEditingName ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nameValue}
+                      onChange={e => setNameValue(e.target.value)}
+                      className="flex-1 rounded-xl border border-teal-500/20 bg-[rgba(15,23,42,0.5)] px-4 py-3 text-sm font-medium text-slate-100 outline-none transition-all duration-250 placeholder:text-slate-600 focus:border-teal-400 focus:shadow-[0_0_0_4px_rgba(20,184,166,0.15)]"
+                      placeholder="Enter your name"
+                      disabled={isSaving}
+                    />
+                    <button
+                      onClick={handleSaveName}
+                      disabled={isSaving}
+                      className="flex h-[46px] w-[46px] items-center justify-center rounded-xl bg-teal-500 text-[#0f172a] transition-all duration-200 hover:bg-teal-400 disabled:opacity-50"
+                    >
+                      {isSaving ? (
+                        <span className="animate-spin text-sm">⏳</span>
+                      ) : (
+                        <Check className="h-5 w-5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingName(false);
+                        setNameValue(displayName);
+                      }}
+                      disabled={isSaving}
+                      className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-slate-400 transition-all duration-200 hover:bg-white/[0.08] hover:text-slate-200 disabled:opacity-50"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200">
+                      {displayName}
+                    </div>
+                    <button
+                      onClick={() => setIsEditingName(true)}
+                      className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-teal-500/20 bg-teal-500/[0.08] text-teal-400 transition-all duration-200 hover:border-teal-500/30 hover:bg-teal-500/[0.12]"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {isEditingName ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={nameValue}
-                    onChange={e => setNameValue(e.target.value)}
-                    className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
-                    placeholder="Enter your name"
-                    disabled={isSaving}
-                  />
-                  <button
-                    onClick={handleSaveName}
-                    disabled={isSaving}
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {isSaving ? (
-                      <span className="animate-spin">⏳</span>
-                    ) : (
-                      <Check className="w-5 h-5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingName(false);
-                      setNameValue(user?.name || user?.email.split('@')[0] || '');
-                    }}
-                    disabled={isSaving}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+              {/* Email */}
+              <div>
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-slate-500">
+                  Email Address
+                </label>
+                <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                  <span className="flex-1 text-sm font-medium text-slate-300">{user?.email}</span>
+                  <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                    Read-Only
+                  </span>
                 </div>
-              ) : (
-                <div className="px-4 py-2 rounded-lg bg-gray-700/50 text-white">
-                  {user?.name || user?.email.split('@')[0]}
-                </div>
-              )}
-            </div>
-
-            {/* Email Field (Read-only) */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-                Email
-              </label>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700/50 text-gray-400">
-                <Mail className="w-5 h-5" />
-                <span>{user?.email}</span>
               </div>
             </div>
+          </div>
 
-            {/* Sign-in Method */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-                Sign-in Method
-              </label>
-              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-gray-700/50">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <span className="text-white font-medium">Signed in with Google</span>
+          {/* ── Sign-in Method ── */}
+          <div>
+            <h3
+              className="mb-4 text-xs font-bold uppercase tracking-[1px]"
+              style={{
+                background: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Sign-In Method
+            </h3>
+            <div
+              className="flex items-center gap-4 rounded-2xl border border-teal-500/[0.1] p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(20,184,166,0.04) 0%, rgba(30,41,59,0.12) 100%)',
+              }}
+            >
+              <div
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(6,182,212,0.06) 100%)',
+                }}
+              >
+                <Mail className="h-5 w-5 text-teal-400" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-slate-200">Email & Password</p>
+                <p className="text-xs text-slate-500">Your primary sign-in method</p>
+              </div>
+              <span className="rounded-full border border-teal-500/25 bg-teal-500/[0.12] px-3 py-1 text-[11px] font-bold text-teal-400">
+                Active
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Footer with Logout */}
-        <div className="p-6 border-t border-gray-700">
-          <div className="space-y-3">
-            <p className="text-sm text-gray-400 text-center">
-              Ready to leave? You can sign back in anytime with your Google account.
-            </p>
-            <Button
-              onClick={handleLogout}
-              className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg font-semibold rounded-xl flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-5 h-5" />
-              Log out
-            </Button>
-          </div>
+        {/* ── Footer ── */}
+        <div className="space-y-3 border-t border-white/[0.06] px-7 py-6">
+          {/* Log Out */}
+          <button
+            onClick={handleLogout}
+            className="group flex w-full items-center justify-center gap-2.5 rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(20,184,166,0.3)]"
+            style={{
+              background: 'linear-gradient(135deg, #2dd4bf 0%, #06defa 100%)',
+              boxShadow: '0 4px 16px rgba(20,184,166,0.2)',
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+            LOG OUT
+          </button>
+
+          {/* Version / Links */}
+          <p className="pt-2 text-center text-[11px] text-slate-600">
+            ReceiptTrack v1.0.0 ·{' '}
+            <span className="cursor-pointer text-teal-500/60 transition-colors hover:text-teal-400">
+              Privacy Policy
+            </span>
+            {' · '}
+            <span className="cursor-pointer text-teal-500/60 transition-colors hover:text-teal-400">
+              Terms of Service
+            </span>
+          </p>
         </div>
       </div>
 
-      {/* CSS Animations */}
       <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+        @keyframes drawerFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+        @keyframes drawerSlideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
       `}</style>
     </>

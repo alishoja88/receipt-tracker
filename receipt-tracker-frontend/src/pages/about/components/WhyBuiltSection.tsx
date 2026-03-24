@@ -2,49 +2,43 @@ import { Lightbulb } from 'lucide-react';
 
 export const WhyBuiltSection = () => {
   return (
-    <div className="mt-16 sm:mt-20 md:mt-24">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-        {/* Left Side - Text */}
-        <div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-            Why I Built ReceiptTrack
-          </h2>
-          <div className="space-y-5 text-base sm:text-lg text-white leading-relaxed">
-            <p>
-              I built ReceiptTrack because I was tired of losing track of small daily purchases that
-              quietly add up over time. Most budgeting tools expect you to connect your bank
-              accounts or enter every expense by hand. I wanted something more visual and more
-              flexible — a tool that starts from the receipts we all already get.
-            </p>
-            <p>
-              This project is also my way of exploring how OCR and AI can be used in a real,
-              practical product. I wanted to design and build a complete system end-to-end: from
-              taking a photo of a receipt, to extracting structured data, to showing meaningful
-              charts and summaries.
-            </p>
-          </div>
-        </div>
+    <div className="mb-24 grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      {/* Left - Storytelling */}
+      <div className="flex flex-col gap-6">
+        <h2 className="mb-2 text-[32px] font-extrabold text-slate-100">Why I Built This</h2>
+        <p className="text-[15px] leading-[1.8] text-slate-300">
+          For years, I watched friends and colleagues struggle with expense management. Every month
+          brought the same chaos: stacks of paper receipts, lost transactions, and hours spent
+          reconciling data. I realized there had to be a better way.
+        </p>
+        <p className="text-[15px] leading-[1.8] text-slate-300">
+          ReceiptTrack emerged from a core belief: financial management shouldn't be a burden. It
+          should be seamless, intelligent, and empowering. I wanted to build something that feels
+          less like a chore and more like a trusted financial advisor—always there, always helping.
+        </p>
+      </div>
 
-        {/* Right Side - Graphic */}
-        <div className="flex justify-center lg:justify-end">
-          <div
-            className="rounded-2xl p-12 flex flex-col items-center justify-center"
-            style={{
-              border: '2px dashed rgba(255, 255, 255, 0.3)',
-              backgroundColor: 'rgba(30, 41, 59, 0.3)',
-            }}
-          >
-            <div className="mb-4">
-              <Lightbulb
-                className="w-16 h-16 sm:w-20 sm:h-20 text-yellow-400"
-                style={{ filter: 'drop-shadow(0 0 20px rgba(250, 204, 21, 0.5))' }}
-              />
-            </div>
-            <p className="text-sm sm:text-base text-white text-center">
-              A personal problem solved with modern technology
-            </p>
-          </div>
-        </div>
+      {/* Right - Vision Card */}
+      <div
+        className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border-[1.5px] p-12 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(20,184,166,0.2),inset_0_1px_2px_rgba(255,255,255,0.1)]"
+        style={{
+          background: 'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(30,41,59,0.4) 100%)',
+          borderColor: 'rgba(20,184,166,0.28)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          boxShadow: '0 12px 40px rgba(20,184,166,0.15), inset 0 1px 2px rgba(255,255,255,0.08)',
+        }}
+      >
+        <Lightbulb
+          className="mb-5 h-12 w-12 text-yellow-400"
+          style={{ filter: 'drop-shadow(0 0 20px rgba(250, 204, 21, 0.4))' }}
+        />
+        <h3 className="mb-3 text-lg font-bold text-teal-400">The Vision</h3>
+        <p className="text-sm leading-relaxed text-slate-300">
+          Empower individuals and businesses to take control of their finances through intelligent,
+          frictionless technology. Every feature is designed with one goal: make financial clarity
+          effortless.
+        </p>
       </div>
     </div>
   );

@@ -32,26 +32,24 @@ export const ReceiptEditableSelect = ({
   className = '',
 }: ReceiptEditableSelectProps) => {
   if (!isEditing) {
-    // Display mode
     if (type === 'category') {
       return (
         <span
-          className={`badge ${getCategoryBadgeClass(value as any)} ${className} px-3.5 py-1.5 rounded-full text-xs font-semibold inline-block`}
+          className={`badge ${getCategoryBadgeClass(value as any)} ${className} inline-block rounded-lg px-2.5 py-1 text-xs font-medium`}
         >
           {getCategoryLabel(value as any)}
         </span>
       );
     }
     return (
-      <span className={`${className} text-base font-semibold text-slate-800`}>
+      <span className={`${className} text-sm font-medium text-slate-300`}>
         {formatPaymentMethod(value)}
       </span>
     );
   }
 
-  // Edit mode
   const selectClasses =
-    'w-full px-2.5 py-1.5 pr-8 rounded-md border-2 border-blue-500 bg-white text-slate-800 text-sm font-semibold outline-none focus:border-blue-600 cursor-pointer appearance-none';
+    'w-full appearance-none rounded-lg border border-teal-500/40 bg-slate-900/60 px-2.5 py-1.5 pr-8 text-sm font-medium text-white outline-none transition-all duration-[180ms] focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/20 cursor-pointer';
   const options = type === 'category' ? categories : paymentMethods;
   const placeholder = type === 'category' ? 'Select Category' : 'Select Payment Method';
 
@@ -76,7 +74,7 @@ export const ReceiptEditableSelect = ({
           </option>
         ))}
       </select>
-      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-slate-800" />
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
     </div>
   );
 };

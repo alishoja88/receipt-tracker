@@ -1,31 +1,19 @@
-import logoImage from '@/assets/images/logo.png';
-
 export const AboutTopSection = () => {
   return (
-    <div className="text-center mb-12">
-      {/* Logo */}
-      <div className="flex justify-center mb-8">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden shadow-lg">
-          <img
-            src={logoImage}
-            alt="ReceiptTrack Logo"
-            className="w-full h-full object-cover"
-            style={{
-              objectPosition: 'center',
-              display: 'block',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Title */}
-      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4">
+    <div className="mb-28 text-center">
+      <h1
+        className="mb-4 text-4xl font-extrabold sm:text-5xl md:text-[48px]"
+        style={{
+          background: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}
+      >
         About ReceiptTrack
       </h1>
-
-      {/* Tagline */}
-      <p className="text-lg sm:text-xl md:text-2xl text-white max-w-2xl mx-auto">
-        Turn messy paper receipts into clear, visual insights about your spending.
+      <p className="mx-auto mb-12 max-w-[600px] text-base leading-relaxed text-slate-300 sm:text-lg">
+        Transform your financial management with intelligent receipt tracking and expense automation
       </p>
     </div>
   );

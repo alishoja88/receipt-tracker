@@ -30,27 +30,27 @@ export const DeleteDialog = ({
 }: DeleteDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={open => !open && onCancel()}>
-      <DialogContent className="bg-slate-800 border-red-500 text-slate-100">
+      <DialogContent className="border-white/[0.08] bg-[#0e1520] text-white">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <DialogTitle className="text-slate-100">{title}</DialogTitle>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <DialogTitle className="text-white">{title}</DialogTitle>
           </div>
-          <DialogDescription className="text-slate-400 mt-3">{message}</DialogDescription>
+          <DialogDescription className="mt-3 text-slate-400">{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-3">
           <Button
             onClick={onCancel}
-            className="bg-gray-700 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors"
+            className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-5 py-2 text-sm font-medium text-slate-300 transition-all duration-[180ms] hover:bg-white/[0.06]"
           >
             Cancel
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors ${
-              isLoading ? 'bg-red-400 cursor-not-allowed opacity-60' : 'bg-red-500 hover:bg-red-600'
-            }`}
+            className="rounded-lg bg-red-500 px-5 py-2 text-sm font-medium text-white transition-all duration-[180ms] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? 'Deleting...' : 'Delete'}
           </Button>

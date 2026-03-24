@@ -1,13 +1,47 @@
-import { HeroSection, FeaturesSection, TestimonialsSection } from './home';
+import { HeroSection, DemoSection, FeaturesSection, HowItWorksSection, CTASection } from './home';
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12">
+    <div className="min-h-screen">
       <HeroSection />
-      <FeaturesSection />
-      <TestimonialsSection />
 
-      {/* Other sections will be added here */}
+      {/* Divider */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.2) 50%, transparent 100%)',
+          }}
+        />
+      </div>
+
+      <DemoSection />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.2) 50%, transparent 100%)',
+          }}
+        />
+      </div>
+
+      <FeaturesSection />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.2) 50%, transparent 100%)',
+          }}
+        />
+      </div>
+
+      <HowItWorksSection />
+      <CTASection />
     </div>
   );
 };

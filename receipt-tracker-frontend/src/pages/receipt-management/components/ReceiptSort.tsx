@@ -21,7 +21,6 @@ export const ReceiptSort = ({ value, onChange }: ReceiptSortProps) => {
 
   const selectedOption = sortOptions.find(opt => opt.value === value) || sortOptions[0];
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -39,60 +38,45 @@ export const ReceiptSort = ({ value, onChange }: ReceiptSortProps) => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style={{
-          backgroundColor: '#1E293B',
-          color: '#F1F5F9',
-          border: '1px solid rgba(59, 130, 246, 0.2)',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.2)';
-        }}
+        className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-sm font-medium text-slate-300 transition-all duration-[180ms] hover:border-white/[0.12] hover:bg-white/[0.05]"
       >
-        <span>✓ Sort by: {selectedOption.label}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span>Sort: {selectedOption.label}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-slate-500 transition-transform duration-[180ms] ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg z-50"
+          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-white/[0.08] shadow-xl"
           style={{
-            backgroundColor: '#1E293B',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
+            background: 'linear-gradient(180deg, rgba(18,27,39,0.98), rgba(12,19,30,0.99))',
+            backdropFilter: 'blur(12px)',
           }}
         >
-          <div className="py-1">
-            {sortOptions.map(option => (
-              <button
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
-                style={{
-                  color: value === option.value ? '#3B82F6' : '#F1F5F9',
-                  backgroundColor:
-                    value === option.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                }}
-                onMouseEnter={e => {
-                  if (value !== option.value) {
-                    e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (value !== option.value) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                {value === option.value && <Check className="w-4 h-4" />}
-                <span>{option.label}</span>
-              </button>
-            ))}
+          <div className="p-1">
+            {sortOptions.map(option => {
+              const isActive = value === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-[180ms] ${
+                    isActive
+                      ? 'bg-teal-500/[0.1] text-teal-300'
+                      : 'text-slate-300 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <span className="flex h-4 w-4 items-center justify-center">
+                    {isActive && <Check className="h-3.5 w-3.5 text-teal-400" />}
+                  </span>
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

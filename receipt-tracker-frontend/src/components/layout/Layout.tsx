@@ -9,7 +9,10 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: '#0F172A' }}>
+    <div
+      className="flex min-h-screen flex-col"
+      style={{ background: 'linear-gradient(180deg, #071018 0%, #0a111a 40%, #0d1420 100%)' }}
+    >
       <Header />
       <main className="flex-1" style={{ padding: '18px' }}>
         {children}

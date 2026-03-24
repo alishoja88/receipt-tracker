@@ -1,74 +1,76 @@
 import profileImage from '@/assets/images/profile.jpeg';
 
 export const AboutDeveloperSection = () => {
-  return (
-    <div className="mt-16 sm:mt-20 md:mt-24">
-      {/* Title */}
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white text-center mb-8">
-        About the Developer
-      </h2>
+  const skills = [
+    'React',
+    'TypeScript',
+    'Next.js',
+    'Tailwind CSS',
+    'REST APIs',
+    'UI/UX Design',
+    'Git & GitHub',
+  ];
 
-      {/* Developer Card */}
-      <div
-        className="rounded-2xl p-8 sm:p-10 md:p-12 lg:p-16 max-w-4xl mx-auto"
+  return (
+    <div
+      className="mb-24 rounded-[20px] border border-teal-500/[0.12] p-10 text-center sm:p-14"
+      style={{
+        background: 'linear-gradient(135deg, rgba(20,184,166,0.06) 0%, rgba(6,182,212,0.03) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
+    >
+      {/* Avatar */}
+      <div className="relative mx-auto mb-8 flex h-[140px] w-[140px] items-center justify-center">
+        <div
+          className="relative z-[2] h-[140px] w-[140px] overflow-hidden rounded-full border-2 border-teal-500/40"
+          style={{
+            boxShadow: '0 0 0 8px rgba(20,184,166,0.1), 0 8px 32px rgba(20,184,166,0.15)',
+          }}
+        >
+          <img src={profileImage} alt="Developer" className="h-full w-full object-cover" />
+        </div>
+      </div>
+
+      {/* Name */}
+      <h3 className="mb-2 text-[28px] font-extrabold text-slate-100">Ali Shoja</h3>
+      <p
+        className="mb-6 text-sm font-bold uppercase tracking-[1px]"
         style={{
-          backgroundColor: 'rgba(30, 41, 59, 0.8)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          background: 'linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
         }}
       >
-        {/* Profile Header */}
-        <div className="flex items-center gap-4 mb-6">
-          {/* Profile Image */}
-          <div
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-offset-2 ring-offset-[#1E293B]"
+        Front-end Developer
+      </p>
+
+      {/* Bio */}
+      <div className="mx-auto mb-7 max-w-[600px] space-y-4 text-[15px] leading-[1.8] text-slate-300">
+        <p>
+          Hi, I’m Ali — a front-end focused developer with hands-on experience in building
+          responsive web applications using React and TypeScript. I enjoy turning ideas into real
+          products by designing clean user interfaces, creating reusable components, and integrating
+          APIs. Recently, I’ve been expanding my skills into full-stack development using
+          technologies like Next.js and backend systems.
+        </p>
+      </div>
+
+      {/* Skills */}
+      <div className="flex flex-wrap justify-center gap-3">
+        {skills.map(skill => (
+          <span
+            key={skill}
+            className="rounded-full border border-teal-500/20 px-4 py-2 text-[13px] font-semibold text-teal-400 transition-all duration-250 hover:-translate-y-0.5 hover:border-teal-500/35 hover:shadow-[0_0_12px_rgba(20,184,166,0.1)]"
             style={{
-              ringColor: '#8B5CF6',
+              background:
+                'linear-gradient(135deg, rgba(20,184,166,0.1) 0%, rgba(6,182,212,0.05) 100%)',
             }}
           >
-            <img
-              src={profileImage}
-              alt="Ali - Full-Stack Developer"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Name and Title */}
-          <div>
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1">Ali</h3>
-            <p className="text-base sm:text-lg text-gray-300">Full-Stack Developer</p>
-          </div>
-        </div>
-
-        {/* Content Paragraphs */}
-        <div className="space-y-5 text-base sm:text-lg text-white leading-relaxed">
-          <p>
-            Hi, I'm Ali - a full-stack developer with a strong focus on front-end UX and TypeScript.
-          </p>
-          <p>
-            I enjoy taking an idea from a rough sketch all the way to a working product: designing
-            the user experience, building React components, structuring a clean backend (for example
-            with NestJS), and connecting everything to real APIs and databases.
-          </p>
-          <p>
-            ReceiptTrack started as a side project, but I treated it like a real product. I wanted
-            to show how I think about architecture, data modeling, and clean code, not just UI
-            layouts. In this app I combined a modern React + TypeScript front end with a
-            Node.js/NestJS backend, a relational database, and AI integrations.
-          </p>
-          <p>
-            In my work I'm comfortable using both traditional tooling and AI tools. I use AI to
-            speed up development (scaffolding, refactoring, documentation) and also inside the
-            product itself — for example, integrating cloud OCR services and LLM APIs to turn
-            unstructured data into something useful.
-          </p>
-          <p>
-            Outside of this project, I have experience with REST APIs, authentication, state
-            management, and basic DevOps (Docker and deployments). ReceiptTrack is a good example of
-            the kind of full-stack, real-world problems I like to work on.
-          </p>
-        </div>
+            {skill}
+          </span>
+        ))}
       </div>
     </div>
   );

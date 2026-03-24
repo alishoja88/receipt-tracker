@@ -22,30 +22,29 @@ export const ReceiptEditableField = ({
   className = '',
 }: ReceiptEditableFieldProps) => {
   if (!isEditing) {
-    // Display mode
     if (field === 'total') {
       return (
-        <span className={`${className} text-base font-semibold text-blue-600`}>
+        <span className={`${className} text-sm font-bold text-teal-400`}>
           ${Number(value || 0).toFixed(2)}
         </span>
       );
     }
     if (field === 'receiptDate') {
       return (
-        <span className={`${className} text-base font-semibold text-slate-800`}>
+        <span className={`${className} text-sm text-slate-400`}>
           {formatLocalDate(value as string)}
         </span>
       );
     }
     return (
-      <span className={`${className} text-base font-semibold text-slate-800 break-words`}>
+      <span className={`${className} text-sm font-semibold text-white break-words`}>
         {value as string}
       </span>
     );
   }
 
   const baseInputClasses =
-    'w-full px-2.5 py-1.5 rounded-md border-2 border-blue-500 bg-white text-slate-800 text-sm font-semibold outline-none focus:border-blue-600';
+    'w-full rounded-lg border border-teal-500/40 bg-slate-900/60 px-2.5 py-1.5 text-sm font-medium text-white outline-none transition-all duration-[180ms] focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/20 [&::-webkit-calendar-picker-indicator]:invert';
 
   if (field === 'receiptDate') {
     const dateValue = value ? formatDateToISO(parseLocalDate(value as string)) : '';
@@ -62,7 +61,7 @@ export const ReceiptEditableField = ({
   if (field === 'total') {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-slate-800 font-semibold">$</span>
+        <span className="text-sm font-medium text-slate-400">$</span>
         <input
           type="number"
           step="0.01"

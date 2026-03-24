@@ -23,15 +23,11 @@ const UploadReceiptPage = () => {
   >('all');
   const [isAddReceiptModalOpen, setIsAddReceiptModalOpen] = useState(false);
 
-  // Memoize the filter change handler to prevent unnecessary re-renders
   const handleFiltersChange = useCallback((newFilters: ReceiptFilters) => {
-    console.log('🟡 UPLOAD PAGE - Filters changed:', newFilters);
     setFilters(newFilters);
   }, []);
 
-  // Handle active filters change from ReceiptSearch
   const handleActiveFiltersChange = useCallback((filters: ActiveFilter[]) => {
-    // Extract date range preset from active filters
     const datePresetFilter = filters.find(f => f.key === 'dateRangePreset');
     if (datePresetFilter) {
       setDateRangePreset(datePresetFilter.value as 'all' | 'today' | 'thisWeek' | 'thisMonth');
@@ -40,31 +36,23 @@ const UploadReceiptPage = () => {
     }
   }, []);
 
-  // Fetch receipts for summary calculation
   const { data: receiptsData } = useReceipts({
     ...filters,
-    limit: 10000, // Get all receipts for summary calculation
+    limit: 10000,
   });
 
-  // Calculate summary statistics
   const calculateSummary = () => {
     const receipts = receiptsData?.items || [];
     const totalReceipts = receiptsData?.pagination?.totalItems || receipts.length;
     const totalAmount = receipts.reduce((sum, receipt) => sum + (receipt.total || 0), 0);
 
-    // Format date range
     let dateRangeText = 'All Time';
     if (filters.dateFrom && filters.dateTo) {
       const fromDate = new Date(filters.dateFrom);
       const toDate = new Date(filters.dateTo);
-      const formatDate = (date: Date) => {
-        return date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
-      };
-      dateRangeText = `${formatDate(fromDate)} – ${formatDate(toDate)}`;
+      const fmt = (d: Date) =>
+        d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      dateRangeText = `${fmt(fromDate)} – ${fmt(toDate)}`;
     } else if (filters.dateFrom) {
       const fromDate = new Date(filters.dateFrom);
       dateRangeText = `From ${fromDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
@@ -72,8 +60,7 @@ const UploadReceiptPage = () => {
       const toDate = new Date(filters.dateTo);
       dateRangeText = `Until ${toDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     } else if (dateRangePreset === 'today') {
-      const today = new Date();
-      dateRangeText = today.toLocaleDateString('en-US', {
+      dateRangeText = new Date().toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -92,32 +79,23 @@ const UploadReceiptPage = () => {
       dateRangeText = `${monthStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${monthEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     }
 
-    return {
-      totalReceipts,
-      totalAmount,
-      dateRangeText,
-    };
+    return { totalReceipts, totalAmount, dateRangeText };
   };
 
   const summary = calculateSummary();
 
-  // React Query mutation for upload
   const uploadMutation = useUploadReceipt();
 
   const handleFileSelect = (selectedFile: File) => {
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     if (!validTypes.includes(selectedFile.type)) {
       setError('Invalid file format. Please select JPG, PNG, or PDF.');
       return;
     }
-
-    // Validate file size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       setError('File size exceeds 10MB. Please select a smaller file.');
       return;
     }
-
     setError(null);
     setFile(selectedFile);
   };
@@ -129,21 +107,14 @@ const UploadReceiptPage = () => {
 
   const handleUpload = async () => {
     if (!file) return;
-
     setError(null);
-
     try {
       await uploadMutation.mutateAsync(file);
-      // Clear file after successful upload
       setFile(null);
       setError(null);
-      // React Query will automatically refetch receipt list
     } catch (err: any) {
-      // Use error message utility to get user-friendly message
       const userFriendlyError = getErrorMessage(err);
       setError(userFriendlyError);
-      // Keep the file so user can try again if error is recoverable
-      // Only clear file if error is not recoverable (e.g., configuration issues)
       if (!isRecoverableError(err)) {
         setFile(null);
       }
@@ -152,50 +123,57 @@ const UploadReceiptPage = () => {
 
   const handleTryAgain = () => {
     setError(null);
-    setFile(null); // Clear file so user can select a new file or the same file again
+    setFile(null);
+  };
+
+  const steps = [
+    { n: 1, title: 'Upload your receipt', desc: 'JPG, PNG, or PDF format' },
+    { n: 2, title: 'AI extracts data', desc: 'Automatically captures all details' },
+    { n: 3, title: 'Review and save', desc: 'Edit and organize your receipts' },
+  ];
+
+  const cardStyle = {
+    background: 'linear-gradient(180deg, rgba(18,27,39,0.92), rgba(12,19,30,0.96))',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)',
   };
 
   return (
-    <div
-      className="min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12"
-      style={{ backgroundColor: '#0F172A' }}
-    >
-      {/* Header Section */}
-      <div
-        className="w-full py-8"
-        style={{
-          backgroundColor: '#0F172A',
-        }}
-      >
-        <div className="container mx-auto max-w-6xl px-3 md:px-4 lg:px-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
-            <div>
-              {/* Title */}
-              <h1 className="text-3xl font-bold text-white mb-3">Receipt Dashboard</h1>
-
-              {/* Description */}
-              <p className="text-base" style={{ color: '#94A3B8' }}>
-                Upload and manage all of your receipts in one place.
-              </p>
-            </div>
-
-            {/* Add Receipt Manually Button */}
-            <button
-              onClick={() => setIsAddReceiptModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors self-start sm:self-auto"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Add Receipts Manually</span>
-              <span className="sm:hidden">Add Receipt</span>
-            </button>
-          </div>
-        </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div
+          className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #14b8a6, transparent 70%)' }}
+        />
+        <div
+          className="absolute -right-40 -top-20 h-[500px] w-[500px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #3b82f6, transparent 70%)' }}
+        />
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto max-w-6xl py-12">
-        {/* Upload Component */}
-        <div className="space-y-6">
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+              Upload Receipts
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
+              Upload and manage all of your receipts in one place
+            </p>
+          </div>
+          <button
+            onClick={() => setIsAddReceiptModalOpen(true)}
+            className="flex items-center justify-center gap-2 self-start rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.06] to-white/[0.02] px-5 py-2.5 text-sm font-medium text-slate-200 transition-all duration-[180ms] hover:border-white/[0.14] hover:bg-white/[0.08] sm:self-auto"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Add Manually</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </header>
+
+        <main className="space-y-10 lg:space-y-12">
+          {/* Upload component */}
           <ReceiptUpload
             onFileSelect={handleFileSelect}
             onFileRemove={handleRemoveFile}
@@ -206,94 +184,104 @@ const UploadReceiptPage = () => {
             onTryAgain={handleTryAgain}
           />
 
-          {/* Loading State */}
+          {/* Processing state */}
           {uploadMutation.isPending && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-              <p className="text-lg font-semibold" style={{ color: '#F1F5F9' }}>
-                Processing receipt...
-              </p>
-              <p className="text-sm mt-2" style={{ color: '#94A3B8' }}>
+              <Loader2 className="mb-4 h-12 w-12 animate-spin text-teal-400" />
+              <p className="text-lg font-semibold text-slate-100">Processing receipt...</p>
+              <p className="mt-2 text-sm text-slate-400">
                 Please wait while we extract and analyze your receipt
               </p>
             </div>
           )}
-        </div>
 
-        {/* Receipt Search/Filter */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-4 px-3 md:px-4 lg:px-0" style={{ color: '#F1F5F9' }}>
-            Receipts
-          </h2>
-          <ReceiptSearch
-            onFiltersChange={handleFiltersChange}
-            onActiveFiltersChange={handleActiveFiltersChange}
-          />
-
-          {/* Summary Statistics */}
-          <div
-            className="rounded-2xl p-6 mt-6 mx-3 md:mx-4 lg:mx-0"
-            style={{
-              backgroundColor: '#1E293B',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Total Receipts */}
-              <div className="flex items-center gap-4">
+          {/* How It Works */}
+          <div>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              How It Works
+            </p>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {steps.map(s => (
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: '#3B82F6' }}
+                  key={s.n}
+                  className="rounded-[22px] border border-white/[0.08] p-6 transition-all duration-[200ms] hover:-translate-y-0.5 hover:border-teal-500/20 hover:shadow-[0_0_20px_rgba(20,184,166,0.08),0_0_40px_rgba(20,184,166,0.04)]"
+                  style={cardStyle}
                 >
-                  <Receipt className="w-6 h-6 text-white" />
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-teal-500/30 bg-teal-500/10 text-sm font-bold text-teal-300">
+                    {s.n}
+                  </div>
+                  <p className="text-base font-semibold text-white">{s.title}</p>
+                  <p className="mt-1 text-sm text-slate-400">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Receipts section */}
+          <div>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Receipts
+            </p>
+
+            <ReceiptSearch
+              onFiltersChange={handleFiltersChange}
+              onActiveFiltersChange={handleActiveFiltersChange}
+            />
+
+            {/* Summary Statistics */}
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div
+                className="flex items-center gap-4 rounded-[22px] border border-white/[0.08] p-5 transition-all duration-[200ms] hover:border-teal-500/20 hover:shadow-[0_0_20px_rgba(20,184,166,0.08),0_0_40px_rgba(20,184,166,0.04)]"
+                style={cardStyle}
+              >
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+                  <Receipt className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-1" style={{ color: '#94A3B8' }}>
-                    TOTAL RECEIPTS
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Total Receipts
                   </p>
-                  <p className="text-2xl font-bold text-white">{summary.totalReceipts}</p>
+                  <p className="mt-1 text-xl font-bold text-white">{summary.totalReceipts}</p>
                 </div>
               </div>
 
-              {/* Total Amount */}
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: '#10B981' }}
-                >
-                  <DollarSign className="w-6 h-6 text-white" />
+              <div
+                className="flex items-center gap-4 rounded-[22px] border border-white/[0.08] p-5 transition-all duration-[200ms] hover:border-teal-500/20 hover:shadow-[0_0_20px_rgba(20,184,166,0.08),0_0_40px_rgba(20,184,166,0.04)]"
+                style={cardStyle}
+              >
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-teal-500/10">
+                  <DollarSign className="h-5 w-5 text-teal-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-1" style={{ color: '#94A3B8' }}>
-                    TOTAL AMOUNT
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Total Amount
                   </p>
-                  <p className="text-2xl font-bold text-white">${summary.totalAmount.toFixed(2)}</p>
+                  <p className="mt-1 text-xl font-bold text-white">
+                    ${summary.totalAmount.toFixed(2)}
+                  </p>
                 </div>
               </div>
 
-              {/* Period */}
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: '#8B5CF6' }}
-                >
-                  <Calendar className="w-6 h-6 text-white" />
+              <div
+                className="flex items-center gap-4 rounded-[22px] border border-white/[0.08] p-5 transition-all duration-[200ms] hover:border-teal-500/20 hover:shadow-[0_0_20px_rgba(20,184,166,0.08),0_0_40px_rgba(20,184,166,0.04)]"
+                style={cardStyle}
+              >
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+                  <Calendar className="h-5 w-5 text-violet-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-1" style={{ color: '#94A3B8' }}>
-                    PERIOD
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Period
                   </p>
-                  <p className="text-lg font-semibold text-white">{summary.dateRangeText}</p>
+                  <p className="mt-1 text-lg font-semibold text-white">{summary.dateRangeText}</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Receipt List */}
-        <div className="mt-6">
+          {/* Receipt List */}
           <ReceiptList limit={10} filters={filters} />
-        </div>
+        </main>
       </div>
 
       {/* Add Receipt Modal */}
@@ -301,24 +289,6 @@ const UploadReceiptPage = () => {
         open={isAddReceiptModalOpen}
         onClose={() => setIsAddReceiptModalOpen(false)}
       />
-
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
