@@ -6,7 +6,7 @@ import { ReceiptsModule } from '../receipts/receipts.module';
 @Module({
   imports: [
     ConfigModule, // For environment variables (API keys)
-    ReceiptsModule, // For SharedReceiptService and ReceiptsRepository
+    ReceiptsModule, // For ReceiptsRepository
   ],
   providers: [OcrService, LlmService, ReceiptProcessingService],
   exports: [ReceiptProcessingService, OcrService, LlmService],
