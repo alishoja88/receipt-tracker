@@ -1,35 +1,34 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GetReceiptsService } from './get-receipts.service';
-import { ReceiptsRepository } from '../infrastructure/persistence/receipts.repository';
-import { Receipt, ReceiptStatus } from '../entities/receipt.entity';
-import { Store } from '../../stores/entities/store.entity';
+import {
+  ReceiptsRepository,
+  ReceiptFilters,
+  PaginationOptions,
+  PaginatedResult,
+} from '../infrastructure/persistence/receipts.repository';
+import { Receipt, ReceiptStatus, PaymentMethod } from '../entities/receipt.entity';
+import { User } from '../../auth/entities/user.entity';
 
 describe('GetReceiptsService', () => {
   let service: GetReceiptsService;
-  let receiptsRepository: jest.Mocked<ReceiptsRepository>;
 
-  const mockStore: Store = {
-    id: 'store-id',
-    name: 'Test Store',
-    address: '123 Test St',
-    phone: '123-456-7890',
-    categoryId: null,
-    category: null,
-    receipts: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const findAll = jest.fn<
+    Promise<PaginatedResult<Receipt>>,
+    [ReceiptFilters, PaginationOptions, string]
+  >();
+  const findById = jest.fn<Promise<Receipt | null>, [string, string?]>();
+
+  const userId = 'user-id';
 
   const mockReceipt: Receipt = {
     id: 'receipt-id',
-    storeId: 'store-id',
-    store: mockStore,
-    receiptDate: new Date('2024-01-15'),
-    category: null,
-    paymentMethod: null,
-    cardType: null,
-    cardLast4Digits: null,
+    userId,
+    user: {} as User,
+    storeName: 'Test Store',
+    receiptDate: new Date(2024, 0, 15),
+    category: 'GROCERY',
+    paymentMethod: PaymentMethod.CARD,
     subtotal: 90,
     tax: 10,
     total: 100,
@@ -37,12 +36,11 @@ describe('GetReceiptsService', () => {
     needsReview: false,
     rawOcrText: null,
     imageUrl: null,
-    items: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  const mockPaginatedResult = {
+  const mockPaginatedResult: PaginatedResult<Receipt> = {
     items: [mockReceipt],
     pagination: {
       page: 1,
@@ -55,23 +53,16 @@ describe('GetReceiptsService', () => {
   };
 
   beforeEach(async () => {
+    jest.resetAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetReceiptsService,
-        {
-          provide: ReceiptsRepository,
-          useValue: {
-            findAll: jest.fn(),
-            findById: jest.fn(),
-          },
-        },
+        { provide: ReceiptsRepository, useValue: { findAll, findById } },
       ],
     }).compile();
 
     service = module.get<GetReceiptsService>(GetReceiptsService);
-    receiptsRepository = module.get(ReceiptsRepository);
-
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -79,43 +70,33 @@ describe('GetReceiptsService', () => {
   });
 
   describe('getAll', () => {
-    it('should return paginated receipts', async () => {
-      receiptsRepository.findAll.mockResolvedValue(mockPaginatedResult);
+    it('should pass filters, pagination and userId to the repository', async () => {
+      const filters: ReceiptFilters = { storeName: 'Test', status: ReceiptStatus.COMPLETED };
+      const pagination: PaginationOptions = { page: 2, limit: 10 };
+      findAll.mockResolvedValue(mockPaginatedResult);
 
-      const result = await service.getAll();
+      const result = await service.getAll(filters, pagination, userId);
 
-      expect(receiptsRepository.findAll).toHaveBeenCalledWith({}, {});
-      expect(result).toEqual(mockPaginatedResult);
-    });
-
-    it('should pass filters and pagination to repository', async () => {
-      const filters = { storeId: 'store-id', status: ReceiptStatus.COMPLETED };
-      const pagination = { page: 2, limit: 10 };
-
-      receiptsRepository.findAll.mockResolvedValue(mockPaginatedResult);
-
-      await service.getAll(filters, pagination);
-
-      expect(receiptsRepository.findAll).toHaveBeenCalledWith(filters, pagination);
+      expect(findAll).toHaveBeenCalledWith(filters, pagination, userId);
+      expect(result).toBe(mockPaginatedResult);
     });
   });
 
   describe('getById', () => {
-    it('should return receipt by id', async () => {
-      receiptsRepository.findById.mockResolvedValue(mockReceipt);
+    it('should return the user receipt by id', async () => {
+      findById.mockResolvedValue(mockReceipt);
 
-      const result = await service.getById('receipt-id');
+      const result = await service.getById('receipt-id', userId);
 
-      expect(receiptsRepository.findById).toHaveBeenCalledWith('receipt-id');
-      expect(result).toEqual(mockReceipt);
+      expect(findById).toHaveBeenCalledWith('receipt-id', userId);
+      expect(result).toBe(mockReceipt);
     });
 
-    it('should throw NotFoundException if receipt not found', async () => {
-      receiptsRepository.findById.mockResolvedValue(null);
+    it('should throw NotFoundException if the receipt is not found', async () => {
+      findById.mockResolvedValue(null);
 
-      await expect(service.getById('non-existent-id')).rejects.toThrow(NotFoundException);
-      await expect(service.getById('non-existent-id')).rejects.toThrow(
-        'Receipt with ID non-existent-id not found',
+      await expect(service.getById('missing-id', userId)).rejects.toThrow(
+        new NotFoundException('Receipt with ID missing-id not found'),
       );
     });
   });

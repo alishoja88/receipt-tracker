@@ -2,47 +2,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateReceiptService } from './update-receipt.service';
 import { ReceiptsRepository } from '../infrastructure/persistence/receipts.repository';
-import { SharedReceiptService } from './shared-receipt.service';
 import { UpdateReceiptDto } from '../dto/update-receipt.dto';
-import { Receipt, ReceiptStatus } from '../entities/receipt.entity';
-import { Store } from '../../stores/entities/store.entity';
-import { Category } from '../entities/category.entity';
+import { Receipt, ReceiptStatus, PaymentMethod } from '../entities/receipt.entity';
+import { User } from '../../auth/entities/user.entity';
 
 describe('UpdateReceiptService', () => {
   let service: UpdateReceiptService;
-  let receiptsRepository: jest.Mocked<ReceiptsRepository>;
-  let sharedReceiptService: jest.Mocked<SharedReceiptService>;
 
-  const mockCategory: Category = {
-    id: 'category-id',
-    name: 'Groceries',
-    description: null,
-    stores: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const findById = jest.fn<Promise<Receipt | null>, [string, string?]>();
+  const update = jest.fn<Promise<Receipt>, [string, Partial<Receipt>, string]>();
 
-  const mockStore: Store = {
-    id: 'store-id',
-    name: 'Test Store',
-    address: '123 Test St',
-    phone: '123-456-7890',
-    categoryId: 'category-id',
-    category: mockCategory,
-    receipts: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const userId = 'user-id';
 
   const mockReceipt: Receipt = {
     id: 'receipt-id',
-    storeId: 'store-id',
-    store: mockStore,
-    receiptDate: new Date('2024-01-15'),
-    category: null,
-    paymentMethod: null,
-    cardType: null,
-    cardLast4Digits: null,
+    userId,
+    user: {} as User,
+    storeName: 'Test Store',
+    receiptDate: new Date(2024, 0, 15),
+    category: 'GROCERY',
+    paymentMethod: PaymentMethod.CARD,
     subtotal: 90,
     tax: 10,
     total: 100,
@@ -50,39 +29,26 @@ describe('UpdateReceiptService', () => {
     needsReview: false,
     rawOcrText: null,
     imageUrl: null,
-    items: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
+  /** The partial data the service handed to repository.update */
+  const updateData = (): Partial<Receipt> => update.mock.calls[0][1];
+
   beforeEach(async () => {
+    jest.resetAllMocks();
+    findById.mockResolvedValue(mockReceipt);
+    update.mockResolvedValue(mockReceipt);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateReceiptService,
-        {
-          provide: ReceiptsRepository,
-          useValue: {
-            findById: jest.fn(),
-            update: jest.fn(),
-            deleteItemsByReceiptId: jest.fn(),
-            createItems: jest.fn(),
-          },
-        },
-        {
-          provide: SharedReceiptService,
-          useValue: {
-            findOrCreateCategory: jest.fn(),
-            findOrCreateStore: jest.fn(),
-          },
-        },
+        { provide: ReceiptsRepository, useValue: { findById, update } },
       ],
     }).compile();
 
     service = module.get<UpdateReceiptService>(UpdateReceiptService);
-    receiptsRepository = module.get(ReceiptsRepository);
-    sharedReceiptService = module.get(SharedReceiptService);
-
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -90,152 +56,80 @@ describe('UpdateReceiptService', () => {
   });
 
   describe('execute', () => {
-    it('should update receipt successfully', async () => {
-      const updateDto: UpdateReceiptDto = {
+    it('should check ownership, update, and return the reloaded receipt', async () => {
+      const updated: Receipt = { ...mockReceipt, total: 110 };
+      findById.mockResolvedValueOnce(mockReceipt).mockResolvedValueOnce(updated);
+
+      const result = await service.execute('receipt-id', { total: 110 }, userId);
+
+      expect(findById).toHaveBeenNthCalledWith(1, 'receipt-id', userId);
+      expect(update).toHaveBeenCalledWith('receipt-id', { total: 110 }, userId);
+      expect(findById).toHaveBeenNthCalledWith(2, 'receipt-id', userId);
+      expect(result).toBe(updated);
+    });
+
+    it('should only send fields that are present in the dto', async () => {
+      await service.execute('receipt-id', { storeName: 'New Store' }, userId);
+
+      expect(Object.keys(updateData())).toEqual(['storeName']);
+    });
+
+    it('should map every updatable field', async () => {
+      const dto: UpdateReceiptDto = {
+        storeName: 'New Store',
         receiptDate: '2024-01-20',
         subtotal: 100,
         tax: 10,
         total: 110,
+        category: 'HEALTH',
+        paymentMethod: 'CASH',
       };
 
-      const updatedReceipt = {
-        ...mockReceipt,
-        receiptDate: new Date(updateDto.receiptDate!),
-        subtotal: updateDto.subtotal ?? null,
-        tax: updateDto.tax ?? null,
-        total: updateDto.total ?? mockReceipt.total,
-      };
-      receiptsRepository.findById
-        .mockResolvedValueOnce(mockReceipt)
-        .mockResolvedValueOnce(updatedReceipt);
-      receiptsRepository.update.mockResolvedValue(updatedReceipt);
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-      receiptsRepository.createItems.mockResolvedValue([]);
+      await service.execute('receipt-id', dto, userId);
 
-      const result = await service.execute('receipt-id', updateDto);
-
-      expect(receiptsRepository.findById).toHaveBeenCalledWith('receipt-id');
-      expect(receiptsRepository.update).toHaveBeenCalled();
-      expect(result).toBeDefined();
-    });
-
-    it('should throw NotFoundException if receipt not found', async () => {
-      const updateDto: UpdateReceiptDto = {
-        total: 110,
-      };
-
-      receiptsRepository.findById.mockResolvedValue(null);
-
-      await expect(service.execute('non-existent-id', updateDto)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should update store if storeName provided', async () => {
-      const newStore: Store = {
-        ...mockStore,
-        id: 'new-store-id',
-        name: 'New Store',
-      };
-
-      const updateDto: UpdateReceiptDto = {
+      expect(updateData()).toEqual({
         storeName: 'New Store',
+        receiptDate: new Date(2024, 0, 20),
+        subtotal: 100,
+        tax: 10,
         total: 110,
-      };
-
-      receiptsRepository.findById
-        .mockResolvedValueOnce(mockReceipt)
-        .mockResolvedValueOnce({ ...mockReceipt, store: newStore });
-      sharedReceiptService.findOrCreateStore.mockResolvedValue(newStore);
-      receiptsRepository.update.mockResolvedValue({ ...mockReceipt, store: newStore });
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-      receiptsRepository.createItems.mockResolvedValue([]);
-
-      await service.execute('receipt-id', updateDto);
-
-      expect(sharedReceiptService.findOrCreateStore).toHaveBeenCalled();
+        category: 'HEALTH',
+        paymentMethod: PaymentMethod.CASH,
+      });
     });
 
-    it('should update items if provided', async () => {
-      const updateDto: UpdateReceiptDto = {
-        total: 110,
-        items: [
-          { name: 'New Item 1', total: 60 },
-          { name: 'New Item 2', total: 50 },
-        ],
-      };
+    it('should clear category and reject unknown payment methods as null', async () => {
+      await service.execute('receipt-id', { category: null, paymentMethod: 'BITCOIN' }, userId);
 
-      receiptsRepository.findById
-        .mockResolvedValueOnce(mockReceipt)
-        .mockResolvedValueOnce({ ...mockReceipt, items: [] });
-      receiptsRepository.update.mockResolvedValue(mockReceipt);
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-      receiptsRepository.createItems.mockResolvedValue([]);
-
-      await service.execute('receipt-id', updateDto);
-
-      expect(receiptsRepository.deleteItemsByReceiptId).toHaveBeenCalledWith('receipt-id');
-      expect(receiptsRepository.createItems).toHaveBeenCalled();
+      expect(updateData()).toEqual({ category: null, paymentMethod: null });
     });
 
-    it('should handle empty items array', async () => {
-      const updateDto: UpdateReceiptDto = {
-        total: 110,
-        items: [],
-      };
+    it('should ignore line items because they are not stored', async () => {
+      await service.execute(
+        'receipt-id',
+        { total: 110, items: [{ name: 'Item 1', total: 110 }] },
+        userId,
+      );
 
-      receiptsRepository.findById
-        .mockResolvedValueOnce(mockReceipt)
-        .mockResolvedValueOnce({ ...mockReceipt, items: [] });
-      receiptsRepository.update.mockResolvedValue(mockReceipt);
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-
-      await service.execute('receipt-id', updateDto);
-
-      expect(receiptsRepository.deleteItemsByReceiptId).toHaveBeenCalled();
-      expect(receiptsRepository.createItems).not.toHaveBeenCalled();
+      expect(Object.keys(updateData())).toEqual(['total']);
     });
 
-    it('should handle category update', async () => {
-      const updateDto: UpdateReceiptDto = {
-        storeCategoryName: 'Electronics',
-        total: 110,
-      };
+    it('should throw NotFoundException and not update if the receipt is not found', async () => {
+      findById.mockResolvedValue(null);
 
-      const newCategory: Category = {
-        id: 'new-category-id',
-        name: 'Electronics',
-        description: null,
-        stores: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      receiptsRepository.findById
-        .mockResolvedValueOnce(mockReceipt)
-        .mockResolvedValueOnce(mockReceipt);
-      sharedReceiptService.findOrCreateCategory.mockResolvedValue(newCategory);
-      sharedReceiptService.findOrCreateStore.mockResolvedValue(mockStore);
-      receiptsRepository.update.mockResolvedValue(mockReceipt);
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-      receiptsRepository.createItems.mockResolvedValue([]);
-
-      await service.execute('receipt-id', updateDto);
-
-      expect(sharedReceiptService.findOrCreateCategory).toHaveBeenCalledWith('Electronics');
+      await expect(service.execute('missing-id', { total: 110 }, userId)).rejects.toThrow(
+        new NotFoundException('Receipt with ID missing-id not found'),
+      );
+      expect(findById).toHaveBeenCalledWith('missing-id', userId);
+      expect(update).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if receipt not found after update', async () => {
-      const updateDto: UpdateReceiptDto = {
-        total: 110,
-      };
+    it('should throw NotFoundException if the receipt is gone after the update', async () => {
+      findById.mockResolvedValueOnce(mockReceipt).mockResolvedValueOnce(null);
 
-      receiptsRepository.findById.mockResolvedValueOnce(mockReceipt).mockResolvedValueOnce(null);
-      receiptsRepository.update.mockResolvedValue(mockReceipt);
-      receiptsRepository.deleteItemsByReceiptId.mockResolvedValue(undefined);
-      receiptsRepository.createItems.mockResolvedValue([]);
-
-      await expect(service.execute('receipt-id', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.execute('receipt-id', { total: 110 }, userId)).rejects.toThrow(
+        new NotFoundException('Receipt with ID receipt-id not found after update'),
+      );
     });
   });
 });

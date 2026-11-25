@@ -2,44 +2,34 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ReceiptsGetController } from './receipts-get.controller';
 import { GetReceiptsService } from '../application/get-receipts.service';
-import { ReceiptMapper } from './receipt-mapper.helper';
-import { Receipt, ReceiptStatus } from '../entities/receipt.entity';
-import { Store } from '../../stores/entities/store.entity';
-import { ReceiptItem } from '../entities/receipt-item.entity';
-
-// Mock ReceiptMapper
-jest.mock('./receipt-mapper.helper', () => ({
-  ReceiptMapper: {
-    toResponseDto: jest.fn(),
-    toListItemDto: jest.fn(),
-  },
-}));
+import {
+  ReceiptFilters,
+  PaginationOptions,
+  PaginatedResult,
+} from '../infrastructure/persistence/receipts.repository';
+import { Receipt, ReceiptStatus, PaymentMethod } from '../entities/receipt.entity';
+import { User } from '../../auth/entities/user.entity';
 
 describe('ReceiptsGetController', () => {
   let controller: ReceiptsGetController;
-  let service: GetReceiptsService;
+  let logSpy: jest.SpyInstance;
 
-  const mockStore: Store = {
-    id: 'store-id',
-    name: 'Test Store',
-    address: '123 Test St',
-    phone: '123-456-7890',
-    categoryId: null,
-    category: null,
-    receipts: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const getAll = jest.fn<
+    Promise<PaginatedResult<Receipt>>,
+    [ReceiptFilters, PaginationOptions, string]
+  >();
+  const getById = jest.fn<Promise<Receipt>, [string, string]>();
+
+  const user = { userId: 'user-id', email: 'test@example.com' };
 
   const mockReceipt: Receipt = {
     id: 'receipt-id',
-    storeId: 'store-id',
-    store: mockStore,
-    receiptDate: new Date('2024-01-15'),
-    category: null,
-    paymentMethod: null,
-    cardType: null,
-    cardLast4Digits: null,
+    userId: 'user-id',
+    user: {} as User,
+    storeName: 'Test Store',
+    receiptDate: new Date(2024, 0, 15),
+    category: 'GROCERY',
+    paymentMethod: PaymentMethod.CARD,
     subtotal: 90,
     tax: 10,
     total: 100,
@@ -47,78 +37,34 @@ describe('ReceiptsGetController', () => {
     needsReview: false,
     rawOcrText: null,
     imageUrl: null,
-    items: [
-      {
-        id: 'item-id',
-        receiptId: 'receipt-id',
-        receipt: {} as Receipt,
-        name: 'Item 1',
-        total: 100,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  const mockResponseDto = {
-    id: 'receipt-id',
-    store: {
-      id: 'store-id',
-      name: 'Test Store',
-      address: '123 Test St',
-      phone: '123-456-7890',
-      category: null,
-    },
-    receiptDate: new Date('2024-01-15'),
-    subtotal: 90,
-    tax: 10,
-    total: 100,
-    status: ReceiptStatus.COMPLETED,
-    needsReview: false,
-    items: [
-      {
-        id: 'item-id',
-        name: 'Item 1',
-        total: 100,
-      },
-    ],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockListItemDto = {
-    id: 'receipt-id',
-    store: {
-      id: 'store-id',
-      name: 'Test Store',
-    },
-    receiptDate: new Date('2024-01-15'),
-    total: 100,
-    status: ReceiptStatus.COMPLETED,
-    needsReview: false,
-    itemsCount: 1,
-    createdAt: new Date(),
+  const pagination = {
+    page: 1,
+    limit: 20,
+    totalItems: 2,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
   };
 
   beforeEach(async () => {
+    jest.resetAllMocks();
+    // The controller logs every request and response; keep test output readable.
+    logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReceiptsGetController],
-      providers: [
-        {
-          provide: GetReceiptsService,
-          useValue: {
-            getAll: jest.fn(),
-            getById: jest.fn(),
-          },
-        },
-      ],
+      providers: [{ provide: GetReceiptsService, useValue: { getAll, getById } }],
     }).compile();
 
     controller = module.get<ReceiptsGetController>(ReceiptsGetController);
-    service = module.get<GetReceiptsService>(GetReceiptsService);
-    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
   });
 
   it('should be defined', () => {
@@ -126,117 +72,92 @@ describe('ReceiptsGetController', () => {
   });
 
   describe('getReceipts', () => {
-    it('should call service.getAll with correct filters and pagination', async () => {
-      const mockResult = {
-        items: [mockReceipt],
-        pagination: {
-          page: 1,
-          limit: 20,
-          totalItems: 1,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
+    it('should build filters and pagination from the query and pass the userId', async () => {
+      getAll.mockResolvedValue({ items: [mockReceipt], pagination });
 
-      (service.getAll as jest.Mock).mockResolvedValue(mockResult);
-      (ReceiptMapper.toListItemDto as jest.Mock).mockReturnValue(mockListItemDto);
+      await controller.getReceipts(
+        user,
+        '2',
+        '10',
+        '2024-01-01',
+        '2024-01-31',
+        'Test',
+        ReceiptStatus.COMPLETED,
+        'GROCERY',
+        'CARD',
+      );
 
-      const result = await controller.getReceipts('1', '20', '2024-01-01', '2024-01-31');
-
-      expect(service.getAll).toHaveBeenCalledWith(
+      expect(getAll).toHaveBeenCalledWith(
         {
           dateFrom: '2024-01-01',
           dateTo: '2024-01-31',
-        },
-        {
-          page: 1,
-          limit: 20,
-        },
-      );
-      expect(ReceiptMapper.toListItemDto).toHaveBeenCalledWith(mockReceipt);
-      expect(result).toEqual({
-        items: [mockListItemDto],
-        pagination: mockResult.pagination,
-      });
-    });
-
-    it('should handle optional query parameters', async () => {
-      const mockResult = {
-        items: [mockReceipt],
-        pagination: {
-          page: 1,
-          limit: 20,
-          totalItems: 1,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
-
-      (service.getAll as jest.Mock).mockResolvedValue(mockResult);
-      (ReceiptMapper.toListItemDto as jest.Mock).mockReturnValue(mockListItemDto);
-
-      const result = await controller.getReceipts(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        'store-id',
-        ReceiptStatus.COMPLETED,
-      );
-
-      expect(service.getAll).toHaveBeenCalledWith(
-        {
-          storeId: 'store-id',
+          storeName: 'Test',
           status: ReceiptStatus.COMPLETED,
+          category: 'GROCERY',
+          paymentMethod: 'CARD',
         },
-        {},
+        { page: 2, limit: 10 },
+        'user-id',
       );
-      expect(result.items).toHaveLength(1);
     });
 
-    it('should map all items to list item DTOs', async () => {
-      const mockResult = {
+    it('should leave filters and pagination empty when no query is given', async () => {
+      getAll.mockResolvedValue({ items: [], pagination });
+
+      await controller.getReceipts(user);
+
+      expect(getAll).toHaveBeenCalledWith({}, {}, 'user-id');
+    });
+
+    it('should map every receipt to a list item and keep the pagination', async () => {
+      getAll.mockResolvedValue({
         items: [mockReceipt, { ...mockReceipt, id: 'receipt-id-2' }],
-        pagination: {
-          page: 1,
-          limit: 20,
-          totalItems: 2,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
+        pagination,
+      });
+
+      const result = await controller.getReceipts(user);
+
+      expect(result.pagination).toBe(pagination);
+      expect(result.items).toEqual([
+        {
+          id: 'receipt-id',
+          storeName: 'Test Store',
+          receiptDate: '2024-01-15',
+          total: 100,
+          status: ReceiptStatus.COMPLETED,
+          needsReview: false,
+          createdAt: mockReceipt.createdAt,
+          category: 'GROCERY',
+          paymentMethod: PaymentMethod.CARD,
         },
-      };
-
-      (service.getAll as jest.Mock).mockResolvedValue(mockResult);
-      (ReceiptMapper.toListItemDto as jest.Mock).mockReturnValue(mockListItemDto);
-
-      const result = await controller.getReceipts();
-
-      expect(ReceiptMapper.toListItemDto).toHaveBeenCalledTimes(2);
-      expect(result.items).toHaveLength(2);
+        expect.objectContaining({ id: 'receipt-id-2' }) as unknown,
+      ]);
     });
   });
 
   describe('getReceiptById', () => {
-    it('should call service.getById with correct id and return mapped result', async () => {
-      (service.getById as jest.Mock).mockResolvedValue(mockReceipt);
-      (ReceiptMapper.toResponseDto as jest.Mock).mockReturnValue(mockResponseDto);
+    it('should fetch the receipt for the current user and return the response dto', async () => {
+      getById.mockResolvedValue(mockReceipt);
 
-      const result = await controller.getReceiptById('receipt-id');
+      const result = await controller.getReceiptById('receipt-id', user);
 
-      expect(service.getById).toHaveBeenCalledWith('receipt-id');
-      expect(ReceiptMapper.toResponseDto).toHaveBeenCalledWith(mockReceipt);
-      expect(result).toEqual(mockResponseDto);
+      expect(getById).toHaveBeenCalledWith('receipt-id', 'user-id');
+      expect(result).toMatchObject({
+        id: 'receipt-id',
+        storeName: 'Test Store',
+        receiptDate: '2024-01-15',
+        subtotal: 90,
+        tax: 10,
+        total: 100,
+      });
     });
 
-    it('should throw NotFoundException if receipt not found', async () => {
-      const error = new NotFoundException('Receipt with ID receipt-id not found');
-      (service.getById as jest.Mock).mockRejectedValue(error);
+    it('should propagate NotFoundException from the service', async () => {
+      getById.mockRejectedValue(new NotFoundException('Receipt with ID receipt-id not found'));
 
-      await expect(controller.getReceiptById('receipt-id')).rejects.toThrow(NotFoundException);
-      expect(ReceiptMapper.toResponseDto).not.toHaveBeenCalled();
+      await expect(controller.getReceiptById('receipt-id', user)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

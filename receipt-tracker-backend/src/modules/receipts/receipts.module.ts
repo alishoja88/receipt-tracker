@@ -11,15 +11,13 @@ import {
   GetReceiptsService,
   UpdateReceiptService,
   DeleteReceiptService,
-  SharedReceiptService,
 } from './application';
 import { ReceiptsRepository } from './infrastructure/persistence/receipts.repository';
-import { Receipt, Category } from './entities';
-import { Store } from '../stores/entities';
+import { Receipt } from './entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Receipt, Category, Store]),
+    TypeOrmModule.forFeature([Receipt]),
     forwardRef(() => import('../ai/ai.module').then(m => m.AiModule)),
   ],
   controllers: [
@@ -34,8 +32,7 @@ import { Store } from '../stores/entities';
     GetReceiptsService,
     UpdateReceiptService,
     DeleteReceiptService,
-    SharedReceiptService,
   ],
-  exports: [ReceiptsRepository, SharedReceiptService],
+  exports: [ReceiptsRepository],
 })
 export class ReceiptsModule {}
