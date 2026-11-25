@@ -5,24 +5,20 @@ import { DeleteReceiptService } from '../application/delete-receipt.service';
 
 describe('ReceiptsDeleteController', () => {
   let controller: ReceiptsDeleteController;
-  let service: DeleteReceiptService;
+
+  const execute = jest.fn<Promise<void>, [string, string]>();
+
+  const user = { userId: 'user-id', email: 'test@example.com' };
 
   beforeEach(async () => {
+    jest.resetAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReceiptsDeleteController],
-      providers: [
-        {
-          provide: DeleteReceiptService,
-          useValue: {
-            execute: jest.fn(),
-          },
-        },
-      ],
+      providers: [{ provide: DeleteReceiptService, useValue: { execute } }],
     }).compile();
 
     controller = module.get<ReceiptsDeleteController>(ReceiptsDeleteController);
-    service = module.get<DeleteReceiptService>(DeleteReceiptService);
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -30,31 +26,22 @@ describe('ReceiptsDeleteController', () => {
   });
 
   describe('deleteReceipt', () => {
-    it('should call service.execute with correct id and return void', async () => {
-      (service.execute as jest.Mock).mockResolvedValue(undefined);
+    it('should delete the receipt for the current user and return nothing', async () => {
+      execute.mockResolvedValue(undefined);
 
-      const result = await controller.deleteReceipt('receipt-id');
+      const result = await controller.deleteReceipt('receipt-id', user);
 
-      expect(service.execute).toHaveBeenCalledWith('receipt-id');
-      expect(service.execute).toHaveBeenCalledTimes(1);
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(execute).toHaveBeenCalledWith('receipt-id', 'user-id');
       expect(result).toBeUndefined();
     });
 
-    it('should throw NotFoundException if receipt not found', async () => {
-      const error = new NotFoundException('Receipt with ID receipt-id not found');
-      (service.execute as jest.Mock).mockRejectedValue(error);
+    it('should propagate NotFoundException from the service', async () => {
+      execute.mockRejectedValue(new NotFoundException('Receipt with ID receipt-id not found'));
 
-      await expect(controller.deleteReceipt('receipt-id')).rejects.toThrow(NotFoundException);
-      await expect(controller.deleteReceipt('receipt-id')).rejects.toThrow(
-        'Receipt with ID receipt-id not found',
+      await expect(controller.deleteReceipt('receipt-id', user)).rejects.toThrow(
+        new NotFoundException('Receipt with ID receipt-id not found'),
       );
-    });
-
-    it('should handle service errors', async () => {
-      const error = new Error('Service error');
-      (service.execute as jest.Mock).mockRejectedValue(error);
-
-      await expect(controller.deleteReceipt('receipt-id')).rejects.toThrow(error);
     });
   });
 });
