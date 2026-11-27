@@ -100,11 +100,8 @@ export class ReceiptsRepository {
       where.receiptDate = Between(dateFrom, dateTo);
     }
 
-    console.log('🔴 REPOSITORY - Query where clause:', JSON.stringify(where, null, 2));
-
     // Get total count
     const totalItems = await this.receiptRepository.count({ where });
-    console.log('🔴 REPOSITORY - Total items count:', totalItems);
 
     // Calculate pagination
     const totalPages = Math.ceil(totalItems / limit);
@@ -118,38 +115,6 @@ export class ReceiptsRepository {
       },
       skip,
       take: limit,
-    });
-
-    console.log('🔴 REPOSITORY - Found items from database:', {
-      count: items.length,
-      items: items.map(r => ({
-        id: r.id,
-        userId: r.userId,
-        storeName: r.storeName,
-        total: r.total,
-        receiptDate: r.receiptDate,
-        category: r.category,
-        createdAt: r.createdAt,
-      })),
-    });
-
-    // Also check ALL receipts in database (for debugging)
-    const allReceipts = await this.receiptRepository.find({
-      select: ['id', 'userId', 'storeName', 'total', 'receiptDate', 'category', 'createdAt'],
-      order: {
-        createdAt: 'DESC',
-      },
-    });
-    console.log('🔴 REPOSITORY - ALL receipts in database (no filter):', {
-      totalCount: allReceipts.length,
-      receipts: allReceipts.map(r => ({
-        id: r.id,
-        userId: r.userId,
-        storeName: r.storeName,
-        total: r.total,
-        receiptDate: r.receiptDate,
-        category: r.category,
-      })),
     });
 
     return {
@@ -366,16 +331,5 @@ export class ReceiptsRepository {
       `❌ NO DUPLICATE - Store: ${normalizedStoreName}, Date: ${receiptDate.toISOString()}, Total: ${total}`,
     );
     return null;
-  }
-
-  /**
-   * DEBUG: Find all receipts without any filter (for debugging only)
-   */
-  async findAllDebug(): Promise<Receipt[]> {
-    return this.receiptRepository.find({
-      order: {
-        createdAt: 'DESC',
-      },
-    });
   }
 }
