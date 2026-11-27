@@ -35,11 +35,4 @@ export class GetReceiptsService {
     }
     return receipt;
   }
-
-  /**
-   * DEBUG: Get all receipts without user filter (for debugging only)
-   */
-  async getAllDebug(): Promise<Receipt[]> {
-    return this.receiptsRepository.findAllDebug();
-  }
 }
